@@ -9,7 +9,6 @@ import dev.isxander.yacl3.api.YetAnotherConfigLib;
 import dev.isxander.yacl3.api.controller.ColorControllerBuilder;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
-import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -102,19 +101,12 @@ public final class HopliteTweaksConfigScreen {
             .group(OptionGroup.createBuilder()
                 .name(text("Chat names"))
                 .description(description(
-                    "The player list updates automatically from highlighted-players.txt in the Hoplite Tweaks repository."
+                    "Names, hex colors, and bold styling update automatically from highlighted-players.txt."
                 ))
                 .option(toggle("Enable name highlights",
                     "Highlights listed player names wherever they appear in Hoplite chat.",
                     defaults.chatNameHighlights, () -> config.chatNameHighlights,
                     value -> config.chatNameHighlights = value))
-                .option(hexColor("Name color (hex)",
-                    "Hex RGB color for highlighted names. Use #RRGGBB, for example #FFD400.",
-                    defaults.chatNameHighlightColor, () -> config.chatNameHighlightColor,
-                    value -> config.chatNameHighlightColor = value))
-                .option(toggle("Bold names", "Displays highlighted player names in bold.",
-                    defaults.chatNameHighlightBold, () -> config.chatNameHighlightBold,
-                    value -> config.chatNameHighlightBold = value))
                 .build())
             .build();
     }
@@ -235,41 +227,6 @@ public final class HopliteTweaksConfigScreen {
                 value -> setter.accept(value.getRGB()))
             .controller(ColorControllerBuilder::create)
             .build();
-    }
-
-    private static Option<String> hexColor(
-        String name, String description, int defaultValue, java.util.function.IntSupplier getter,
-        java.util.function.IntConsumer setter
-    ) {
-        return Option.<String>createBuilder()
-            .name(text(name))
-            .description(description(description))
-            .binding(formatHex(defaultValue), () -> formatHex(getter.getAsInt()), value -> {
-                Integer parsed = parseHex(value);
-                if (parsed != null) {
-                    setter.accept(0xFF000000 | parsed);
-                }
-            })
-            .controller(StringControllerBuilder::create)
-            .build();
-    }
-
-    private static String formatHex(int color) {
-        return String.format("#%06X", color & 0xFFFFFF);
-    }
-
-    private static Integer parseHex(String value) {
-        if (value == null) {
-            return null;
-        }
-        String normalized = value.trim();
-        if (normalized.startsWith("#")) {
-            normalized = normalized.substring(1);
-        }
-        if (!normalized.matches("[0-9a-fA-F]{6}")) {
-            return null;
-        }
-        return Integer.parseInt(normalized, 16);
     }
 
     private static OptionDescription description(String value) {

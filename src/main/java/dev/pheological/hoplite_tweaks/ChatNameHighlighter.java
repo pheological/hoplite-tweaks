@@ -45,7 +45,7 @@ public final class ChatNameHighlighter {
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build();
     private static final AtomicBoolean REFRESHING = new AtomicBoolean();
-    private static volatile List<String> players = List.of();
+    private static volatile List<PlayerHighlight> players = List.of();
     private static volatile String etag = "";
 
     private ChatNameHighlighter() {
@@ -107,7 +107,7 @@ public final class ChatNameHighlighter {
                 }
 
                 String text = new String(body, StandardCharsets.UTF_8);
-                List<String> parsed = parsePlayers(text);
+                List<PlayerHighlight> parsed = parsePlayers(text);
                 if (parsed.isEmpty()) {
                     HopliteTweaks.LOGGER.warn(
                         "Highlighted player list contains no valid usernames; keeping cached names"
@@ -126,12 +126,7 @@ public final class ChatNameHighlighter {
         if (!config.enabled || !config.chatNameHighlights || !HopliteSession.isActive()) {
             return message;
         }
-        return highlight(
-            message,
-            players,
-            config.chatNameHighlightColor,
-            config.chatNameHighlightBold
-        );
+        return highlight(message, players);
     }
 
     private static void loadBundledPlayers() {
@@ -142,7 +137,9 @@ public final class ChatNameHighlighter {
                 HopliteTweaks.LOGGER.warn("Bundled highlighted player list is missing");
                 return;
             }
-            List<String> bundled = parsePlayers(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
+            List<PlayerHighlight> bundled = parsePlayers(
+                new String(stream.readAllBytes(), StandardCharsets.UTF_8)
+            );
             if (!bundled.isEmpty()) {
                 players = bundled;
             }
@@ -155,7 +152,7 @@ public final class ChatNameHighlighter {
         try {
             Path path = cacheFile();
             if (Files.exists(path)) {
-                List<String> cached = parsePlayers(Files.readString(path));
+                List<PlayerHighlight> cached = parsePlayers(Files.readString(path));
                 if (!cached.isEmpty()) {
                     players = cached;
                 }
@@ -182,27 +179,53 @@ public final class ChatNameHighlighter {
         return cacheDirectory().resolve("highlighted-players.txt");
     }
 
-    static List<String> parsePlayers(String text) {
-        List<String> parsed = new ArrayList<>();
+    static List<PlayerHighlight> parsePlayers(String text) {
+        List<PlayerHighlight> parsed = new ArrayList<>();
         for (String inputLine : text.split("\\R")) {
             String line = inputLine.replace("\uFEFF", "").trim();
-            if (line.isEmpty() || line.startsWith("#") || !VALID_USERNAME.matcher(line).matches()) {
+            if (line.isEmpty() || line.startsWith("#")) {
                 continue;
             }
-            String normalized = line.toLowerCase(Locale.ROOT);
-            if (!parsed.contains(normalized)) {
-                parsed.add(normalized);
+            String[] fields = line.split("\\s+");
+            if (fields.length < 2
+                || fields.length > 3
+                || !VALID_USERNAME.matcher(fields[0]).matches()) {
+                continue;
             }
+            Integer color = parseHex(fields[1]);
+            Boolean bold = fields.length == 2 ? Boolean.FALSE : parseWeight(fields[2]);
+            if (color == null || bold == null) {
+                continue;
+            }
+            String normalized = fields[0].toLowerCase(Locale.ROOT);
+            parsed.removeIf(existing -> existing.name().equals(normalized));
+            parsed.add(new PlayerHighlight(normalized, color, bold));
             if (parsed.size() >= MAX_PLAYERS) {
                 break;
             }
         }
-        parsed.sort(Comparator.comparingInt(String::length).reversed());
+        parsed.sort(Comparator.comparingInt((PlayerHighlight entry) -> entry.name().length()).reversed());
         return List.copyOf(parsed);
     }
 
-    static Component highlight(Component message, List<String> names, int color, boolean bold) {
-        if (names.isEmpty()) {
+    private static Integer parseHex(String value) {
+        String normalized = value.startsWith("#") ? value.substring(1) : value;
+        if (!normalized.matches("[0-9a-fA-F]{6}")) {
+            return null;
+        }
+        return Integer.parseInt(normalized, 16);
+    }
+
+    private static Boolean parseWeight(String value) {
+        return switch (value.toLowerCase(Locale.ROOT)) {
+            case "bold" -> Boolean.TRUE;
+            case "normal", "plain" -> Boolean.FALSE;
+            default -> null;
+        };
+    }
+
+    static Component highlight(Component message, List<PlayerHighlight> highlights) {
+        if (highlights.isEmpty()) {
             return message;
         }
 
@@ -213,7 +236,7 @@ public final class ChatNameHighlighter {
             String lower = text.toLowerCase(Locale.ROOT);
             int cursor = 0;
             while (cursor < text.length()) {
-                NameMatch match = findNextMatch(lower, cursor, names);
+                NameMatch match = findNextMatch(lower, cursor, highlights);
                 if (match == null) {
                     result.append(Component.literal(text.substring(cursor)).setStyle(part.getStyle()));
                     break;
@@ -223,8 +246,8 @@ public final class ChatNameHighlighter {
                         .setStyle(part.getStyle()));
                 }
                 Style highlightStyle = part.getStyle()
-                    .withColor(TextColor.fromRgb(color & 0xFFFFFF))
-                    .withBold(bold);
+                    .withColor(TextColor.fromRgb(match.highlight().color()))
+                    .withBold(match.highlight().bold());
                 result.append(Component.literal(text.substring(match.start(), match.end()))
                     .setStyle(highlightStyle));
                 cursor = match.end();
@@ -237,9 +260,14 @@ public final class ChatNameHighlighter {
         return changed ? result : message;
     }
 
-    private static NameMatch findNextMatch(String text, int fromIndex, List<String> names) {
+    private static NameMatch findNextMatch(
+        String text,
+        int fromIndex,
+        List<PlayerHighlight> highlights
+    ) {
         NameMatch best = null;
-        for (String name : names) {
+        for (PlayerHighlight highlight : highlights) {
+            String name = highlight.name();
             int start = text.indexOf(name, fromIndex);
             while (start >= 0) {
                 int end = start + name.length();
@@ -248,7 +276,7 @@ public final class ChatNameHighlighter {
                     if (best == null
                         || start < best.start()
                         || start == best.start() && end > best.end()) {
-                        best = new NameMatch(start, end);
+                        best = new NameMatch(start, end, highlight);
                     }
                     break;
                 }
@@ -263,6 +291,9 @@ public final class ChatNameHighlighter {
             || character >= '0' && character <= '9';
     }
 
-    private record NameMatch(int start, int end) {
+    record PlayerHighlight(String name, int color, boolean bold) {
+    }
+
+    private record NameMatch(int start, int end, PlayerHighlight highlight) {
     }
 }

@@ -1,6 +1,7 @@
 # Hoplite Tweaks highlighted players
 #
-# Add one Minecraft username per line. Names are matched case-insensitively.
-# Blank lines and lines beginning with # are ignored.
+# Format: USERNAME #RRGGBB bold
+# Use "normal" instead of "bold" for regular text weight.
+# Names are matched case-insensitively. Blank lines and comments are ignored.
 
-PHEOLOGICAL
+PHEOLOGICAL #FFD400 bold

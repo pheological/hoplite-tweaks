@@ -29,8 +29,6 @@ public final class HopliteTweaksConfig {
     public boolean nickDetector = true;
     public boolean antiSlur = true;
     public boolean chatNameHighlights = true;
-    public boolean chatNameHighlightBold = true;
-    public int chatNameHighlightColor = 0xFFFFD400;
     public int markerScalePercent = 100;
     public int markerHeightPercent = 35;
     public int markerMaxDistance = 500;

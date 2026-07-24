@@ -28,7 +28,7 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
   - Weekly crate reminders and automatic pet selection.
   - Royale nick detection with continuous player checks and rate-limited profile lookups.
   - Outgoing anti-slur protection backed by an automatically updated HTTPS text list and offline cache.
-  - Bold and hex-color-configurable chat-name highlighting backed by an automatically updated player list.
+  - Per-player chat-name colors and bold styling backed by an automatically updated player list.
 
 ### Network disclosure
 
@@ -40,6 +40,9 @@ upload chat messages, player identifiers, server information, telemetry, or othe
 The chat-name highlighter similarly downloads [`highlighted-players.txt`](./highlighted-players.txt).
 Both files are bundled into releases as immediate offline fallbacks and refreshed from this
 repository without uploading any player or chat data.
+
+Each highlighted player line uses `USERNAME #RRGGBB bold`. Replace `bold` with `normal` for
+regular text weight.
 
 The feature implementation is original. The project contains a small,
 dependency-free protobuf wire reader for compatibility with the public Apollo

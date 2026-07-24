@@ -11,34 +11,44 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ChatNameHighlighterTest {
     @Test
     void parsesValidUniqueUsernames() {
         assertEquals(
-            List.of("longer_name", "player"),
+            List.of(
+                new ChatNameHighlighter.PlayerHighlight("longer_name", 0x00FF55, false),
+                new ChatNameHighlighter.PlayerHighlight("player", 0xFFD400, true)
+            ),
             ChatNameHighlighter.parsePlayers("""
                 # comment
-                Player
-                player
-                longer_name
-                invalid-name
+                Player #FFFFFF normal
+                player #FFD400 bold
+                longer_name 00FF55 plain
+                invalid-name #FF0000 bold
+                badcolor #nope bold
                 """)
         );
     }
 
     @Test
     void highlightsWholeUsernamesOnly() {
-        List<String> names = List.of("player");
+        List<ChatNameHighlighter.PlayerHighlight> names = List.of(
+            new ChatNameHighlighter.PlayerHighlight("player", 0xFF00AA, true)
+        );
         Component original = Component.literal("Player: hello playerish");
-        Component highlighted = ChatNameHighlighter.highlight(original, names, 0xFF00AA, true);
+        Component highlighted = ChatNameHighlighter.highlight(original, names);
 
         assertEquals(original.getString(), highlighted.getString());
         assertFalse(highlighted == original);
+        Component highlightedName = highlighted.toFlatList().getFirst();
+        assertEquals(0xFF00AA, highlightedName.getStyle().getColor().getValue());
+        assertTrue(highlightedName.getStyle().isBold());
         Component noMatch = Component.literal("playerish");
         assertSame(
             noMatch,
-            ChatNameHighlighter.highlight(noMatch, names, 0xFF00AA, true)
+            ChatNameHighlighter.highlight(noMatch, names)
         );
     }
 
