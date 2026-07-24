@@ -4,4 +4,4 @@
 # Use "bold" or "normal" for either weight.
 # Names are matched case-insensitively. Blank lines and comments are ignored.
 
-PHEOLOGICAL #AA0000 bold #AA0000 bold
+PHEOLOGICAL #AA0000 bold #000000 normal
