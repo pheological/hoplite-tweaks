@@ -41,8 +41,10 @@ The chat-name highlighter similarly downloads [`highlighted-players.txt`](./high
 Both files are bundled into releases as immediate offline fallbacks and refreshed from this
 repository without uploading any player or chat data.
 
-Each highlighted player line uses `USERNAME #RRGGBB bold`. Replace `bold` with `normal` for
-regular text weight.
+Each highlighted player line uses
+`USERNAME #CHAT_HEX chat_weight #NAMETAG_HEX nametag_weight`. Each weight is either `bold` or
+`normal`. Chat styling only applies to a configured sender name followed by a colon, so ordinary
+mentions are left unchanged.
 
 The feature implementation is original. The project contains a small,
 dependency-free protobuf wire reader for compatibility with the public Apollo

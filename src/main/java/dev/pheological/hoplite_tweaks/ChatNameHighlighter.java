@@ -176,19 +176,27 @@ public final class ChatNameHighlighter {
                 continue;
             }
             String[] fields = line.split("\\s+");
-            if (fields.length < 2
-                || fields.length > 3
+            if (fields.length != 3
+                && fields.length != 5
                 || !VALID_USERNAME.matcher(fields[0]).matches()) {
                 continue;
             }
-            Integer color = parseHex(fields[1]);
-            Boolean bold = fields.length == 2 ? Boolean.FALSE : parseWeight(fields[2]);
-            if (color == null || bold == null) {
+            Integer chatColor = parseHex(fields[1]);
+            Boolean chatBold = parseWeight(fields[2]);
+            Integer nameTagColor = fields.length == 5 ? parseHex(fields[3]) : chatColor;
+            Boolean nameTagBold = fields.length == 5 ? parseWeight(fields[4]) : chatBold;
+            if (chatColor == null || chatBold == null || nameTagColor == null || nameTagBold == null) {
                 continue;
             }
             String normalized = fields[0].toLowerCase(Locale.ROOT);
             parsed.removeIf(existing -> existing.name().equals(normalized));
-            parsed.add(new PlayerHighlight(normalized, color, bold));
+            parsed.add(new PlayerHighlight(
+                normalized,
+                chatColor,
+                chatBold,
+                nameTagColor,
+                nameTagBold
+            ));
             if (parsed.size() >= MAX_PLAYERS) {
                 break;
             }
@@ -214,45 +222,113 @@ public final class ChatNameHighlighter {
     }
 
     static Component highlight(Component message, List<PlayerHighlight> highlights) {
+        return highlight(message, highlights, true, false);
+    }
+
+    /**
+     * Applies the configured world nametag style for a player.
+     */
+    public static Component highlightNameTag(String username, Component nameTag) {
+        String normalized = username.toLowerCase(Locale.ROOT);
+        List<PlayerHighlight> match = players.stream()
+            .filter(entry -> entry.name().equals(normalized))
+            .findFirst()
+            .map(List::of)
+            .orElseGet(List::of);
+        return highlightNameTag(nameTag, match);
+    }
+
+    static Component highlightNameTag(Component nameTag, List<PlayerHighlight> highlights) {
+        return highlight(nameTag, highlights, false, true);
+    }
+
+    private static Component highlight(
+        Component message,
+        List<PlayerHighlight> highlights,
+        boolean requireFollowingColon,
+        boolean useNameTagStyle
+    ) {
         if (highlights.isEmpty()) {
+            return message;
+        }
+        List<Component> parts = message.toFlatList();
+        StringBuilder fullText = new StringBuilder();
+        for (Component part : parts) {
+            fullText.append(part.getString());
+        }
+        String lower = fullText.toString().toLowerCase(Locale.ROOT);
+        List<NameMatch> matches = new ArrayList<>();
+        int searchFrom = 0;
+        while (searchFrom < lower.length()) {
+            NameMatch match = findNextMatch(
+                lower,
+                searchFrom,
+                highlights,
+                requireFollowingColon
+            );
+            if (match == null) {
+                break;
+            }
+            matches.add(match);
+            searchFrom = match.end();
+        }
+        if (matches.isEmpty()) {
             return message;
         }
 
         MutableComponent result = Component.empty();
-        boolean changed = false;
-        for (Component part : message.toFlatList()) {
+        int partStart = 0;
+        int matchIndex = 0;
+        for (Component part : parts) {
             String text = part.getString();
-            String lower = text.toLowerCase(Locale.ROOT);
+            int partEnd = partStart + text.length();
             int cursor = 0;
             while (cursor < text.length()) {
-                NameMatch match = findNextMatch(lower, cursor, highlights);
-                if (match == null) {
+                int absoluteCursor = partStart + cursor;
+                while (matchIndex < matches.size()
+                    && matches.get(matchIndex).end() <= absoluteCursor) {
+                    matchIndex++;
+                }
+                if (matchIndex >= matches.size()
+                    || matches.get(matchIndex).start() >= partEnd) {
                     result.append(Component.literal(text.substring(cursor)).setStyle(part.getStyle()));
                     break;
                 }
-                if (match.start() > cursor) {
-                    result.append(Component.literal(text.substring(cursor, match.start()))
+                NameMatch match = matches.get(matchIndex);
+                if (absoluteCursor < match.start()) {
+                    int normalEnd = Math.min(partEnd, match.start()) - partStart;
+                    result.append(Component.literal(text.substring(cursor, normalEnd))
                         .setStyle(part.getStyle()));
+                    cursor = normalEnd;
+                    continue;
                 }
+                int color = useNameTagStyle
+                    ? match.highlight().nameTagColor()
+                    : match.highlight().chatColor();
+                boolean bold = useNameTagStyle
+                    ? match.highlight().nameTagBold()
+                    : match.highlight().chatBold();
                 Style highlightStyle = part.getStyle()
-                    .withColor(TextColor.fromRgb(match.highlight().color()))
-                    .withBold(match.highlight().bold());
-                result.append(Component.literal(text.substring(match.start(), match.end()))
+                    .withColor(TextColor.fromRgb(color))
+                    .withBold(bold);
+                int styledEnd = Math.min(partEnd, match.end()) - partStart;
+                result.append(Component.literal(text.substring(cursor, styledEnd))
                     .setStyle(highlightStyle));
-                cursor = match.end();
-                changed = true;
+                cursor = styledEnd;
             }
             if (text.isEmpty()) {
                 result.append(part.copy());
             }
+            partStart = partEnd;
         }
-        return changed ? result : message;
+        return result;
     }
 
     private static NameMatch findNextMatch(
         String text,
         int fromIndex,
-        List<PlayerHighlight> highlights
+        List<PlayerHighlight> highlights,
+        boolean requireFollowingColon
     ) {
         NameMatch best = null;
         for (PlayerHighlight highlight : highlights) {
@@ -261,7 +337,8 @@ public final class ChatNameHighlighter {
             while (start >= 0) {
                 int end = start + name.length();
                 if ((start == 0 || !isUsernameCharacter(text.charAt(start - 1)))
-                    && (end == text.length() || !isUsernameCharacter(text.charAt(end)))) {
+                    && (end == text.length() || !isUsernameCharacter(text.charAt(end)))
+                    && (!requireFollowingColon || followedByColon(text, end))) {
                     if (best == null
                         || start < best.start()
                         || start == best.start() && end > best.end()) {
@@ -275,12 +352,25 @@ public final class ChatNameHighlighter {
         return best;
     }
 
+    private static boolean followedByColon(String text, int index) {
+        while (index < text.length() && Character.isWhitespace(text.charAt(index))) {
+            index++;
+        }
+        return index < text.length() && text.charAt(index) == ':';
+    }
+
     private static boolean isUsernameCharacter(char character) {
         return character == '_' || character >= 'a' && character <= 'z'
             || character >= '0' && character <= '9';
     }
 
-    record PlayerHighlight(String name, int color, boolean bold) {
+    record PlayerHighlight(
+        String name,
+        int chatColor,
+        boolean chatBold,
+        int nameTagColor,
+        boolean nameTagBold
+    ) {
     }
 
     private record NameMatch(int start, int end, PlayerHighlight highlight) {

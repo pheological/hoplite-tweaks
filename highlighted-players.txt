@@ -1,7 +1,7 @@
 # Hoplite Tweaks highlighted players
 #
-# Format: USERNAME #RRGGBB bold
-# Use "normal" instead of "bold" for regular text weight.
+# Format: USERNAME #CHAT_HEX chat_weight #NAMETAG_HEX nametag_weight
+# Use "bold" or "normal" for either weight.
 # Names are matched case-insensitively. Blank lines and comments are ignored.
 
-PHEOLOGICAL #FFD400 bold
+PHEOLOGICAL #FFD400 bold #00FF55 normal

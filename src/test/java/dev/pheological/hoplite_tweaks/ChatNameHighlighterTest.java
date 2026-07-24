@@ -19,14 +19,18 @@ final class ChatNameHighlighterTest {
     void parsesValidUniqueUsernames() {
         assertEquals(
             List.of(
-                new ChatNameHighlighter.PlayerHighlight("longer_name", 0x00FF55, false),
-                new ChatNameHighlighter.PlayerHighlight("player", 0xFFD400, true)
+                new ChatNameHighlighter.PlayerHighlight(
+                    "longer_name", 0x00FF55, false, 0x4488FF, true
+                ),
+                new ChatNameHighlighter.PlayerHighlight(
+                    "player", 0xFFD400, true, 0xFFD400, true
+                )
             ),
             ChatNameHighlighter.parsePlayers("""
                 # comment
-                Player #FFFFFF normal
+                Player #FFFFFF normal #00FFFF normal
                 player #FFD400 bold
-                longer_name 00FF55 plain
+                longer_name 00FF55 plain #4488FF bold
                 invalid-name #FF0000 bold
                 badcolor #nope bold
                 """)
@@ -36,7 +40,9 @@ final class ChatNameHighlighterTest {
     @Test
     void highlightsWholeUsernamesOnly() {
         List<ChatNameHighlighter.PlayerHighlight> names = List.of(
-            new ChatNameHighlighter.PlayerHighlight("player", 0xFF00AA, true)
+            new ChatNameHighlighter.PlayerHighlight(
+                "player", 0xFF00AA, true, 0x00FF55, false
+            )
         );
         Component original = Component.literal("Player: hello playerish");
         Component highlighted = ChatNameHighlighter.highlight(original, names);
@@ -46,6 +52,8 @@ final class ChatNameHighlighterTest {
         Component highlightedName = highlighted.toFlatList().getFirst();
         assertEquals(0xFF00AA, highlightedName.getStyle().getColor().getValue());
         assertTrue(highlightedName.getStyle().isBold());
+        Component mention = Component.literal("hello Player, welcome");
+        assertSame(mention, ChatNameHighlighter.highlight(mention, names));
         Component noMatch = Component.literal("playerish");
         assertSame(
             noMatch,
@@ -56,7 +64,9 @@ final class ChatNameHighlighterTest {
     @Test
     void overridesExistingRankNameColor() {
         List<ChatNameHighlighter.PlayerHighlight> names = List.of(
-            new ChatNameHighlighter.PlayerHighlight("pheological", 0xFFD400, true)
+            new ChatNameHighlighter.PlayerHighlight(
+                "pheological", 0xFFD400, true, 0x00FF55, false
+            )
         );
         Component rankedMessage = Component.empty()
             .append(Component.literal("105★ VIP ").withColor(0xFF55FF))
@@ -73,6 +83,23 @@ final class ChatNameHighlighterTest {
         assertNotNull(color);
         assertEquals(0xFFD400, color.getValue());
         assertTrue(namePart.getStyle().isBold());
+    }
+
+    @Test
+    void usesIndependentNameTagStyle() {
+        List<ChatNameHighlighter.PlayerHighlight> names = List.of(
+            new ChatNameHighlighter.PlayerHighlight(
+                "pheological", 0xFFD400, true, 0x00FF55, false
+            )
+        );
+        Component nameTag = ChatNameHighlighter.highlightNameTag(
+            Component.literal("PHEOLOGICAL").withColor(0xFF55FF),
+            names
+        );
+        Component styledName = nameTag.toFlatList().getFirst();
+
+        assertEquals(0x00FF55, styledName.getStyle().getColor().getValue());
+        assertFalse(styledName.getStyle().isBold());
     }
 
     @Test
