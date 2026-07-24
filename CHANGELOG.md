@@ -23,4 +23,5 @@
 - Added remotely maintained player-name highlighting with configurable chat color and bold text.
 - Added direct `#RRGGBB` input for highlighted player-name colors.
 - Moved each highlighted player's hex color and bold/normal style into the GitHub text list.
+- Applied name styling at the final chat HUD insertion point so Hoplite rank formatting is reliably overridden.
 - Added Fabric builds for 1.21.11, 26.1.x, and 26.2.

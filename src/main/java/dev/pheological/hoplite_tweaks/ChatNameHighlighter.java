@@ -1,7 +1,6 @@
 package dev.pheological.hoplite_tweaks;
 
 import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
-import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
@@ -56,19 +55,6 @@ public final class ChatNameHighlighter {
         loadCache();
         refresh();
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> refresh());
-        ClientReceiveMessageEvents.MODIFY_GAME.register((message, overlay) ->
-            overlay ? message : highlightIfEnabled(message)
-        );
-        ClientReceiveMessageEvents.ALLOW_CHAT.register((message, signed, sender, params, receivedAt) -> {
-            Component highlighted = highlightIfEnabled(message);
-            if (highlighted == message) {
-                return true;
-            }
-            // Fabric has no MODIFY_CHAT event. Its API directs modifiers to cancel
-            // the original and add the styled component to the chat HUD themselves.
-            HopliteChat.send(highlighted);
-            return false;
-        });
     }
 
     public static void refresh() {
@@ -121,7 +107,10 @@ public final class ChatNameHighlighter {
             });
     }
 
-    private static Component highlightIfEnabled(Component message) {
+    /**
+     * Styles a message immediately before Minecraft stores it in the chat HUD.
+     */
+    public static Component highlightForDisplay(Component message) {
         HopliteTweaksConfig config = HopliteTweaksConfig.get();
         if (!config.enabled || !config.chatNameHighlights || !HopliteSession.isActive()) {
             return message;

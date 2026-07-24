@@ -1,6 +1,7 @@
 package dev.pheological.hoplite_tweaks;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -50,6 +51,28 @@ final class ChatNameHighlighterTest {
             noMatch,
             ChatNameHighlighter.highlight(noMatch, names)
         );
+    }
+
+    @Test
+    void overridesExistingRankNameColor() {
+        List<ChatNameHighlighter.PlayerHighlight> names = List.of(
+            new ChatNameHighlighter.PlayerHighlight("pheological", 0xFFD400, true)
+        );
+        Component rankedMessage = Component.empty()
+            .append(Component.literal("105★ VIP ").withColor(0xFF55FF))
+            .append(Component.literal("PHEOLOGICAL").withColor(0xFF55FF))
+            .append(Component.literal(": hello"));
+
+        Component highlighted = ChatNameHighlighter.highlight(rankedMessage, names);
+        Component namePart = highlighted.toFlatList().stream()
+            .filter(part -> part.getString().equals("PHEOLOGICAL"))
+            .findFirst()
+            .orElseThrow();
+
+        TextColor color = namePart.getStyle().getColor();
+        assertNotNull(color);
+        assertEquals(0xFFD400, color.getValue());
+        assertTrue(namePart.getStyle().isBold());
     }
 
     @Test
