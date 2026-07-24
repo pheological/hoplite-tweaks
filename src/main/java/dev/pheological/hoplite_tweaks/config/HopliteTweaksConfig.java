@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
-    private static final int CURRENT_CONFIG_VERSION = 1;
+    private static final int CURRENT_CONFIG_VERSION = 2;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("hoplite-tweaks.json");
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
@@ -27,6 +27,8 @@ public final class HopliteTweaksConfig {
     public boolean showCooldownsInHotbar = true;
     public boolean showCooldownsAtTop = false;
     public boolean showTeammateDistance = true;
+    public boolean hideDistanceWhenTeammateInRenderDistance = true;
+    public boolean hideMarkerWhenTeammateInRenderDistance = true;
     public boolean compactCooldowns = false;
     public boolean partyMessagePing = true;
     public boolean autoPartyChat = false;
@@ -59,15 +61,16 @@ public final class HopliteTweaksConfig {
     }
 
     public static void load() {
-        boolean migrated = false;
+        int loadedVersion = CURRENT_CONFIG_VERSION;
         if (Files.exists(PATH)) {
             try (Reader reader = Files.newBufferedReader(PATH)) {
                 JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
                 HopliteTweaksConfig loaded = GSON.fromJson(json, HopliteTweaksConfig.class);
                 if (loaded != null) {
                     instance = loaded;
-                    migrated = !json.has("configVersion")
-                        || json.get("configVersion").getAsInt() < CURRENT_CONFIG_VERSION;
+                    loadedVersion = json.has("configVersion")
+                        ? json.get("configVersion").getAsInt()
+                        : 0;
                 }
             } catch (Exception exception) {
                 HopliteTweaks.LOGGER.warn("Could not read {}; defaults will be used", PATH, exception);
@@ -81,13 +84,17 @@ public final class HopliteTweaksConfig {
             instance.hudXPercent = 100;
             instance.hudYPercent = 100;
         }
-        if (migrated || instance.configVersion < CURRENT_CONFIG_VERSION) {
+        if (loadedVersion < 1) {
             instance.autoApplySkins = true;
             instance.doubleTapSwordDrop = true;
             instance.doubleTapLegendaryDrop = true;
-            instance.configVersion = CURRENT_CONFIG_VERSION;
-            migrated = true;
         }
+        if (loadedVersion < 2) {
+            instance.hideDistanceWhenTeammateInRenderDistance = true;
+            instance.hideMarkerWhenTeammateInRenderDistance = true;
+        }
+        boolean migrated = loadedVersion < CURRENT_CONFIG_VERSION;
+        instance.configVersion = CURRENT_CONFIG_VERSION;
         instance.clamp();
         if (migrated) {
             save();

@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 //?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.network.chat.Component;
@@ -23,6 +24,8 @@ import org.joml.Quaternionf;
 
 import java.util.Comparator;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Renders Apollo teammates as camera-facing markers in the world.
@@ -36,7 +39,13 @@ public final class TeammateMarkerRenderer {
     private static final Identifier SOLID_TEXTURE =
         Identifier.fromNamespaceAndPath("minecraft", "textures/block/white_concrete.png");
     private static final int FULL_BRIGHT = 0x00F000F0;
+    private static final int HEALTH_COLOR = 0xFFFF6B7A;
     private static final float MARKER_HALF_SIZE = 0.18F;
+    private static final Pattern HEART_HEALTH = Pattern.compile(
+        "(\\d+(?:\\.\\d+)?)\\s*(?:❤|♥|hp\\b)",
+        Pattern.CASE_INSENSITIVE
+    );
+    private static final Pattern NUMBER = Pattern.compile("\\d+(?:\\.\\d+)?");
 
     private TeammateMarkerRenderer() {
     }
@@ -100,7 +109,13 @@ public final class TeammateMarkerRenderer {
         Vec3 worldPosition = loaded == null
             ? new Vec3(teammate.x(), teammate.y(), teammate.z())
             : loaded.getPosition(tickDelta);
-        return new Marker(teammate, worldPosition, worldPosition.distanceTo(cameraPosition));
+        return new Marker(
+            teammate,
+            worldPosition,
+            worldPosition.distanceTo(cameraPosition),
+            loaded != null,
+            tabHealth(client, teammate.playerId())
+        );
     }
 
     //? >=26 {
@@ -137,53 +152,78 @@ public final class TeammateMarkerRenderer {
         matrices.pushPose();
         matrices.translate(relative.x, relative.y + height, relative.z);
 
-        matrices.pushPose();
-        matrices.mulPose(cameraRotation);
-        matrices.scale((float) scale, (float) scale, (float) scale);
-        //? >=26 {
-        /*context.submitNodeCollector().submitCustomGeometry(
-        *///?} else {
-        context.commandQueue().submitCustomGeometry(
-        //?}
-            matrices,
-            RenderTypes.textSeeThrough(config.markerShape == HopliteTweaksConfig.MarkerShape.CHEVRON
-                ? MARKER_TEXTURE : SOLID_TEXTURE),
-            (pose, vertices) -> markerGeometry(pose, vertices, color, config.markerShape)
-        );
-        matrices.popPose();
+        boolean hideShape = marker.inRenderDistance
+            && config.hideMarkerWhenTeammateInRenderDistance;
+        if (!hideShape) {
+            matrices.pushPose();
+            matrices.mulPose(cameraRotation);
+            matrices.scale((float) scale, (float) scale, (float) scale);
+            //? >=26 {
+            /*context.submitNodeCollector().submitCustomGeometry(
+            *///?} else {
+            context.commandQueue().submitCustomGeometry(
+            //?}
+                matrices,
+                RenderTypes.textSeeThrough(config.markerShape == HopliteTweaksConfig.MarkerShape.CHEVRON
+                    ? MARKER_TEXTURE : SOLID_TEXTURE),
+                (pose, vertices) -> markerGeometry(pose, vertices, color, config.markerShape)
+            );
+            matrices.popPose();
+        }
 
-        Component label = markerLabel(marker, config);
-        if (label != null) {
+        Component nameLabel = markerNameLabel(marker, config);
+        Component detailsLabel = markerDetailsLabel(marker, config);
+        if (nameLabel != null || detailsLabel != null) {
             Minecraft client = Minecraft.getInstance();
             int background = config.markerTextBackground
                 ? (int) (client.options.getBackgroundOpacity(0.25F) * 255.0F) << 24
                 : 0;
             float textScale = 0.025F * (float) scale * config.markerTextScalePercent / 100.0F;
-            float textX = -client.font.width(label) / 2.0F;
 
             matrices.pushPose();
             matrices.translate(0.0D, 0.42D * scale, 0.0D);
             matrices.mulPose(cameraRotation);
             matrices.scale(textScale, -textScale, textScale);
-            //? >=26 {
-            /*context.submitNodeCollector().submitText(
-            *///?} else {
-            context.commandQueue().submitText(
-            //?}
-                matrices,
-                textX,
-                0.0F,
-                label.getVisualOrderText(),
-                false,
-                Font.DisplayMode.SEE_THROUGH,
-                FULL_BRIGHT,
-                0xFFFFFFFF,
-                background,
-                0
-            );
+            if (nameLabel != null) {
+                submitText(context, matrices, nameLabel, 0.0F, background);
+            }
+            if (detailsLabel != null) {
+                submitText(context, matrices, detailsLabel, nameLabel == null ? 0.0F : 10.0F, background);
+            }
             matrices.popPose();
         }
         matrices.popPose();
+    }
+
+    //? >=26 {
+    /*private static void submitText(
+        LevelRenderContext context,
+    *///?} else {
+    private static void submitText(
+        WorldRenderContext context,
+    //?}
+        PoseStack matrices,
+        Component label,
+        float y,
+        int background
+    ) {
+        float x = -Minecraft.getInstance().font.width(label) / 2.0F;
+        //? >=26 {
+        /*context.submitNodeCollector().submitText(
+        *///?} else {
+        context.commandQueue().submitText(
+        //?}
+            matrices,
+            x,
+            y,
+            label.getVisualOrderText(),
+            false,
+            Font.DisplayMode.SEE_THROUGH,
+            FULL_BRIGHT,
+            0xFFFFFFFF,
+            background,
+            0
+        );
     }
 
     private static void markerGeometry(
@@ -242,23 +282,84 @@ public final class TeammateMarkerRenderer {
             .setLight(FULL_BRIGHT);
     }
 
-    private static Component markerLabel(Marker marker, HopliteTweaksConfig config) {
+    private static Component markerNameLabel(Marker marker, HopliteTweaksConfig config) {
+        if (!config.showTeammateName) {
+            return null;
+        }
         String name = abbreviate(marker.teammate.displayName(), 22);
-        String distance = String.format(Locale.ROOT, "%.1fm", marker.distance);
-        Component nameText = Component.literal(name)
+        return Component.literal(name)
             .withStyle(style -> style.withColor(config.markerNameColor & 0xFFFFFF));
-        Component distanceText = Component.literal(distance)
-            .withStyle(style -> style.withColor(config.markerDistanceColor & 0xFFFFFF));
-        if (config.showTeammateName && config.showTeammateDistance) {
-            return nameText.copy().append(Component.literal("  •  ")).append(distanceText);
+    }
+
+    private static Component markerDetailsLabel(Marker marker, HopliteTweaksConfig config) {
+        boolean showDistance = config.showTeammateDistance
+            && !(marker.inRenderDistance && config.hideDistanceWhenTeammateInRenderDistance);
+        boolean showHealth = marker.health >= 0.0F;
+        if (!showDistance && !showHealth) {
+            return null;
         }
-        if (config.showTeammateName) {
-            return nameText;
+
+        var details = Component.empty();
+        if (showDistance) {
+            details.append(Component.literal(String.format(Locale.ROOT, "%.1fm", marker.distance))
+                .withStyle(style -> style.withColor(config.markerDistanceColor & 0xFFFFFF)));
         }
-        if (config.showTeammateDistance) {
-            return distanceText;
+        if (showDistance && showHealth) {
+            details.append(Component.literal("  •  "));
         }
-        return null;
+        if (showHealth) {
+            details.append(Component.literal(formatHealth(marker.health) + "❤")
+                .withStyle(style -> style.withColor(HEALTH_COLOR & 0xFFFFFF)));
+        }
+        return details;
+    }
+
+    private static float tabHealth(Minecraft client, java.util.UUID playerId) {
+        if (client.getConnection() == null) {
+            return -1.0F;
+        }
+        PlayerInfo info = client.getConnection().getPlayerInfo(playerId);
+        if (info == null || info.getTabListDisplayName() == null) {
+            return -1.0F;
+        }
+        return extractTabHealth(
+            info.getTabListDisplayName().getString(),
+            info.getProfile().name()
+        );
+    }
+
+    static float extractTabHealth(String displayText, String playerName) {
+        if (displayText == null || displayText.isBlank()) {
+            return -1.0F;
+        }
+        String clean = displayText.replaceAll("(?i)§[0-9A-FK-ORX]", "");
+        Matcher heart = HEART_HEALTH.matcher(clean);
+        if (heart.find()) {
+            return parseHealth(heart.group(1));
+        }
+
+        String withoutName = playerName == null || playerName.isBlank()
+            ? clean
+            : Pattern.compile(Pattern.quote(playerName), Pattern.CASE_INSENSITIVE)
+                .matcher(clean)
+                .replaceFirst("");
+        Matcher number = NUMBER.matcher(withoutName);
+        return number.find() ? parseHealth(number.group()) : -1.0F;
+    }
+
+    private static float parseHealth(String value) {
+        try {
+            return Float.parseFloat(value);
+        } catch (NumberFormatException ignored) {
+            return -1.0F;
+        }
+    }
+
+    private static String formatHealth(float health) {
+        if (health == Math.rint(health)) {
+            return Integer.toString((int) health);
+        }
+        return String.format(Locale.ROOT, "%.1f", health);
     }
 
     private static String abbreviate(String value, int max) {
@@ -268,6 +369,12 @@ public final class TeammateMarkerRenderer {
         return value.length() <= max ? value : value.substring(0, max - 1) + "…";
     }
 
-    private record Marker(ApolloModels.Teammate teammate, Vec3 position, double distance) {
+    private record Marker(
+        ApolloModels.Teammate teammate,
+        Vec3 position,
+        double distance,
+        boolean inRenderDistance,
+        float health
+    ) {
     }
 }

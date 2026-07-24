@@ -29,6 +29,25 @@ class TeammateMarkerRendererTest {
         assertEquals(TEAMMATE, color("Teammate", 0xFF55DD77));
     }
 
+    @Test
+    void extractsHeartHealthFromFormattedTabName() {
+        assertEquals(
+            17.5F,
+            TeammateMarkerRenderer.extractTabHealth(
+                "\u00A7b[TEAM] \u00A7fPHEOLOGICAL \u00A7c17.5❤",
+                "PHEOLOGICAL"
+            )
+        );
+    }
+
+    @Test
+    void ignoresDigitsInsideUsername() {
+        assertEquals(
+            18.0F,
+            TeammateMarkerRenderer.extractTabHealth("Player123 18", "Player123")
+        );
+    }
+
     private int color(String name, int serverColor) {
         ApolloModels.Teammate teammate = new ApolloModels.Teammate(
             UUID.randomUUID(),

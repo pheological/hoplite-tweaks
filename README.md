@@ -7,7 +7,8 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
 - Apollo teammate support
   - Receives Hoplite's `lunar:apollo` team packets.
   - Renders a camera-facing chevron above each teammate in the world.
-  - Displays the teammate name and live distance above the marker.
+  - Displays tab-list health and live distance beneath the teammate name.
+  - Can hide nearby marker shapes and distance while retaining health.
   - Uses Hoplite role colors: kings are yellow, party members are blue, and
     regular teammates are green.
   - Supports marker scale, height, visibility range, name, and distance controls.
@@ -20,7 +21,7 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
   - Can show purely visual vanilla-style cooldown sweeps on matching hotbar items.
   - Can render optional client-side top bars using matching hotbar item models.
 - Mod Menu configuration
-  - Separate General, Team, and Cooldowns tabs.
+  - Separate General, Team View, and Cooldowns tabs.
   - Feature toggles, sliders, role-color information, and reset-per-tab.
   - Cooldown HUD position, scale, and compact-mode controls.
   - Persists to `config/hoplite-tweaks.json`.

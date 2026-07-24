@@ -30,6 +30,8 @@
 - Stabilized shared-item hotbar cooldowns and added optional top cooldown bars.
 - Replaced top-bar cooldown titles with matching hotbar item models.
 - Lowered the Minecraft 1.21.11 Fabric API minimum to 0.141.3.
+- Renamed Team settings to Team View and cleaned up nearby teammate markers.
+- Moved distance below teammate names and added health parsed from Hoplite's tab list.
 - Added a remotely maintained, locally cached outgoing anti-slur filter.
 - Bundled an immediate anti-slur fallback and extended filtering to outgoing slash commands.
 - Added remotely maintained player-name highlighting with configurable chat color and bold text.

@@ -34,12 +34,17 @@ public final class HopliteTweaksConfigScreen {
 
     private static ConfigCategory teamCategory(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
         return ConfigCategory.createBuilder()
-            .name(text("Team"))
+            .name(text("Team View"))
             .tooltip(text("Teammate markers, labels, role colors, and duel glow."))
             .group(OptionGroup.createBuilder()
                 .name(text("World marker"))
                 .option(toggle("Show teammate markers", "Draw a marker above each Apollo teammate.",
                     defaults.teammateMarkers, () -> config.teammateMarkers, value -> config.teammateMarkers = value))
+                .option(toggle("Hide marker when teammate is in render distance",
+                    "Hides the triangle, chevron, or other shape when Minecraft is already rendering the teammate.",
+                    defaults.hideMarkerWhenTeammateInRenderDistance,
+                    () -> config.hideMarkerWhenTeammateInRenderDistance,
+                    value -> config.hideMarkerWhenTeammateInRenderDistance = value))
                 .option(Option.<HopliteTweaksConfig.MarkerShape>createBuilder()
                     .name(text("Marker shape"))
                     .description(description("Choose the clean marker silhouette shown above teammates."))
@@ -66,6 +71,11 @@ public final class HopliteTweaksConfigScreen {
                 .option(toggle("Show distance", "Displays the distance to the teammate.",
                     defaults.showTeammateDistance, () -> config.showTeammateDistance,
                     value -> config.showTeammateDistance = value))
+                .option(toggle("Hide distance when teammate is in render distance",
+                    "Hides distance for teammates Minecraft is already rendering. Health remains visible.",
+                    defaults.hideDistanceWhenTeammateInRenderDistance,
+                    () -> config.hideDistanceWhenTeammateInRenderDistance,
+                    value -> config.hideDistanceWhenTeammateInRenderDistance = value))
                 .option(toggle("Text background", "Adds a translucent background behind marker text.",
                     defaults.markerTextBackground, () -> config.markerTextBackground,
                     value -> config.markerTextBackground = value))
