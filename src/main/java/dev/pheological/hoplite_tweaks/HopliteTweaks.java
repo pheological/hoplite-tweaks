@@ -40,6 +40,7 @@ public final class HopliteTweaks {
         TeammateMarkerRenderer.initialize();
         HopliteAutomation.initialize();
         HopliteNickDetector.initialize();
+        AntiSlurFilter.initialize();
         LOGGER.info("Hoplite Tweaks initialized; features are gated to server addresses containing 'hoplite'");
     }
 }

@@ -9,7 +9,9 @@ import dev.isxander.yacl3.api.YetAnotherConfigLib;
 import dev.isxander.yacl3.api.controller.ColorControllerBuilder;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
+import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
+import dev.pheological.hoplite_tweaks.AntiSlurFilter;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -24,7 +26,10 @@ public final class HopliteTweaksConfigScreen {
         HopliteTweaksConfig defaults = new HopliteTweaksConfig();
         return YetAnotherConfigLib.createBuilder()
             .title(text("Hoplite Tweaks"))
-            .save(HopliteTweaksConfig::save)
+            .save(() -> {
+                HopliteTweaksConfig.save();
+                AntiSlurFilter.refreshFromConfig();
+            })
             .category(generalCategory(config, defaults))
             .category(teamCategory(config, defaults))
             .category(cooldownCategory(config, defaults))
@@ -149,6 +154,27 @@ public final class HopliteTweaksConfigScreen {
                 .option(toggle("Auto Party Chat",
                     "Runs /party chat after a light-green joined message.",
                     defaults.autoPartyChat, () -> config.autoPartyChat, value -> config.autoPartyChat = value))
+                .option(toggle("Anti-slur",
+                    "Stops blocked words and phrases from being sent in Hoplite chat.",
+                    defaults.antiSlur, () -> config.antiSlur, value -> config.antiSlur = value))
+                .option(Option.<String>createBuilder()
+                    .name(text("Anti-slur list URL"))
+                    .description(description(
+                        "HTTPS raw-text URL. One blocked term per line; # comments; prefix an exception with !."
+                    ))
+                    .binding(defaults.antiSlurListUrl, () -> config.antiSlurListUrl,
+                        value -> config.antiSlurListUrl = value)
+                    .controller(StringControllerBuilder::create)
+                    .build())
+                .option(ButtonOption.createBuilder()
+                    .name(text("Refresh anti-slur list"))
+                    .text(text("Refresh now"))
+                    .description(description("Downloads and caches the latest valid list from the configured URL."))
+                    .action(screen -> {
+                        HopliteTweaksConfig.save();
+                        AntiSlurFilter.refreshFromConfig();
+                    })
+                    .build())
                 .option(toggle("Weekly crate reminder",
                     "Five seconds after joining Hoplite, reminds you once per Pacific calendar week after 1:00 AM.",
                     defaults.weeklyCrateReminder, () -> config.weeklyCrateReminder,

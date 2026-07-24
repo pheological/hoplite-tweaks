@@ -18,4 +18,5 @@
 - Added Mod Menu configuration with persistent toggles and layout controls.
 - Added party-message pings, automatic party chat, weekly crate reminders,
   automatic pet selection, and Royale nick detection.
+- Added a remotely maintained, locally cached outgoing anti-slur filter.
 - Added Fabric builds for 1.21.11, 26.1.x, and 26.2.

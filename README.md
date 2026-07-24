@@ -30,6 +30,7 @@ disconnects and stay inert in single-player and on other servers.
   - Automatic party-chat switching after joining a party.
   - Weekly crate reminders and automatic pet selection.
   - Royale nick detection with continuous player checks and rate-limited profile lookups.
+  - Outgoing anti-slur protection backed by an HTTPS text list and offline cache.
 
 The feature implementation is original. The project contains a small,
 dependency-free protobuf wire reader for compatibility with the public Apollo
