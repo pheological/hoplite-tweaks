@@ -28,7 +28,6 @@ public final class HopliteTweaksConfig {
     public boolean autoPet = true;
     public boolean nickDetector = true;
     public boolean antiSlur = true;
-    public String antiSlurListUrl = "";
     public int markerScalePercent = 100;
     public int markerHeightPercent = 35;
     public int markerMaxDistance = 500;
@@ -104,10 +103,6 @@ public final class HopliteTweaksConfig {
         if (lastCrateReminderWeek == null) {
             lastCrateReminderWeek = "";
         }
-        if (antiSlurListUrl == null) {
-            antiSlurListUrl = "";
-        }
-        antiSlurListUrl = antiSlurListUrl.trim();
     }
 
     public enum MarkerShape {

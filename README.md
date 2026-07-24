@@ -27,7 +27,14 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
   - Automatic party-chat switching after joining a party.
   - Weekly crate reminders and automatic pet selection.
   - Royale nick detection with continuous player checks and rate-limited profile lookups.
-  - Outgoing anti-slur protection backed by an HTTPS text list and offline cache.
+  - Outgoing anti-slur protection backed by an automatically updated HTTPS text list and offline cache.
+
+### Network disclosure
+
+The anti-slur module makes a read-only HTTPS GET request to the
+[`blocked-words.txt`](./blocked-words.txt) file in this repository when the mod starts and when
+the player joins a server. This request only downloads moderation rules. Hoplite Tweaks does not
+upload chat messages, player identifiers, server information, telemetry, or other user data.
 
 The feature implementation is original. The project contains a small,
 dependency-free protobuf wire reader for compatibility with the public Apollo

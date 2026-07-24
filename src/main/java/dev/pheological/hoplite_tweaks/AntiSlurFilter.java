@@ -28,57 +28,39 @@ public final class AntiSlurFilter {
     private static final int MAX_LIST_BYTES = 256 * 1024;
     private static final int MAX_RULES = 5_000;
     private static final int MAX_RULE_LENGTH = 128;
+    /*
+     * Modrinth review note: this fixed, first-party URL is used only to download the
+     * UTF-8 moderation word list maintained in the Hoplite Tweaks repository. The
+     * request is a one-way GET; no chat messages, player identifiers, server data,
+     * telemetry, or other user information are uploaded.
+     */
+    private static final URI LIST_URI = URI.create(
+        "https://raw.githubusercontent.com/pheological/hoplite-tweaks/main/blocked-words.txt"
+    );
     private static final HttpClient HTTP = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(5))
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build();
     private static final AtomicBoolean REFRESHING = new AtomicBoolean();
     private static volatile RuleSet rules = RuleSet.EMPTY;
-    private static volatile String sourceUrl = "";
     private static volatile String etag = "";
 
     private AntiSlurFilter() {
     }
 
     public static void initialize() {
-        loadCacheForConfiguredUrl();
-        refreshFromConfig();
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> refreshFromConfig());
+        loadCache();
+        refresh();
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> refresh());
         ClientSendMessageEvents.ALLOW_CHAT.register(AntiSlurFilter::allowChatMessage);
     }
 
-    public static void refreshFromConfig() {
-        String configuredUrl = HopliteTweaksConfig.get().antiSlurListUrl.trim();
-        if (configuredUrl.isEmpty()) {
-            rules = RuleSet.EMPTY;
-            sourceUrl = "";
-            etag = "";
-            return;
-        }
-
-        URI uri;
-        try {
-            uri = URI.create(configuredUrl);
-        } catch (IllegalArgumentException exception) {
-            HopliteTweaks.LOGGER.warn("Anti-slur list URL is invalid");
-            return;
-        }
-        if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null) {
-            HopliteTweaks.LOGGER.warn("Anti-slur list URL must use HTTPS");
-            return;
-        }
-
-        if (!configuredUrl.equals(sourceUrl)) {
-            rules = RuleSet.EMPTY;
-            sourceUrl = configuredUrl;
-            etag = "";
-            loadCacheForConfiguredUrl();
-        }
+    public static void refresh() {
         if (!REFRESHING.compareAndSet(false, true)) {
             return;
         }
 
-        HttpRequest.Builder request = HttpRequest.newBuilder(uri)
+        HttpRequest.Builder request = HttpRequest.newBuilder(LIST_URI)
             .timeout(Duration.ofSeconds(8))
             .header("Accept", "text/plain")
             .header("User-Agent", "Hoplite-Tweaks/1.0")
@@ -114,7 +96,7 @@ public final class AntiSlurFilter {
                 }
                 rules = parsed;
                 response.headers().firstValue("ETag").ifPresent(value -> etag = value);
-                saveCache(text, configuredUrl);
+                saveCache(text);
                 HopliteTweaks.LOGGER.info("Loaded {} anti-slur rules", parsed.blocked().size());
             });
     }
@@ -133,21 +115,13 @@ public final class AntiSlurFilter {
         return false;
     }
 
-    private static void loadCacheForConfiguredUrl() {
-        String configuredUrl = HopliteTweaksConfig.get().antiSlurListUrl.trim();
-        if (configuredUrl.isEmpty()) {
-            return;
-        }
+    private static void loadCache() {
         try {
             Path cacheFile = cacheFile();
-            Path cacheUrlFile = cacheUrlFile();
-            if (Files.exists(cacheFile)
-                && Files.exists(cacheUrlFile)
-                && configuredUrl.equals(Files.readString(cacheUrlFile).trim())) {
+            if (Files.exists(cacheFile)) {
                 RuleSet cached = parseRules(Files.readString(cacheFile));
                 if (!cached.blocked().isEmpty()) {
                     rules = cached;
-                    sourceUrl = configuredUrl;
                 }
             }
         } catch (Exception exception) {
@@ -155,11 +129,10 @@ public final class AntiSlurFilter {
         }
     }
 
-    private static void saveCache(String text, String configuredUrl) {
+    private static void saveCache(String text) {
         try {
             Files.createDirectories(cacheDirectory());
             Files.writeString(cacheFile(), text, StandardCharsets.UTF_8);
-            Files.writeString(cacheUrlFile(), configuredUrl, StandardCharsets.UTF_8);
         } catch (Exception exception) {
             HopliteTweaks.LOGGER.warn("Could not cache the anti-slur list");
         }
@@ -171,10 +144,6 @@ public final class AntiSlurFilter {
 
     private static Path cacheFile() {
         return cacheDirectory().resolve("anti-slur-list.txt");
-    }
-
-    private static Path cacheUrlFile() {
-        return cacheDirectory().resolve("anti-slur-list.url");
     }
 
     static RuleSet parseRules(String text) {
