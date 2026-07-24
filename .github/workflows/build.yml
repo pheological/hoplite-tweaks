@@ -1,6 +1,38 @@
-name: build
-on: [ push, pull_request ]
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    uses: ./.github/workflows/build_reusable.yml
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: chmod +x gradlew
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Upload jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: hoplite-tweaks
+          path: |
+            versions/**/build/libs/*.jar
+            build/libs/*.jar
