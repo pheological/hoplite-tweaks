@@ -1,0 +1,44 @@
+loomx.loom_version="1.17-SNAPSHOT"
+
+mod.id = "hoplite_tweaks"
+mod.name = "Hoplite Tweaks"
+mod.group = "dev.pheological"
+mod.version = "1.0"
+mod.channel_tag = ""
+mod.description = "An all-in-one, configurable Fabric client mod for Hoplite with teammate tools, cooldown tracking, automation, reminders, and Royale nick detection."
+mod.authors = ["PHEOLOGICAL"]
+mod.contributors = []
+mod.inception_year = "2026"
+mod.license.name = "GPL-3.0-only"
+mod.license.url = "https://www.gnu.org/licenses/gpl-3.0.html"
+mod.license.dist = "repo"
+mod.sources_url = "https://github.com/pheological/hoplite-tweaks"
+mod.homepage_url = "https://github.com/pheological/hoplite-tweaks"
+mod.issues_url = "https://github.com/pheological/hoplite-tweaks/issues"
+mod.discord_url = ""
+[[mod.pom.developers]]
+id = "pheological"
+name = "PHEOLOGICAL"
+url = "https://github.com/pheological"
+
+[fabric]
+deps.fabric-loader = "0.19.3"
+
+[fabric."1.21.11"]
+deps.minecraft = "1.21.11"
+deps.fabric-api = "0.141.5+1.21.11"
+deps.modmenu = "17.0.0"
+deps.yacl = "pHWDw3Vc"
+
+[fabric."26.1.2"]
+deps.minecraft = "26.1.2"
+deps.fabric-api = "0.145.4+26.1.2"
+deps.modmenu = "18.0.0"
+deps.yacl = "A6V2zTVY"
+publish.additionalVersions = ["26.1.1", "26.1"]
+
+[fabric."26.2"]
+deps.minecraft = "26.2"
+deps.fabric-api = "0.154.2+26.2"
+deps.modmenu = "20.0.0-beta.1"
+deps.yacl = "LlSShNCR"
