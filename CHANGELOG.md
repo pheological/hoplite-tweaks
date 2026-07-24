@@ -20,4 +20,5 @@
   automatic pet selection, and Royale nick detection.
 - Added a remotely maintained, locally cached outgoing anti-slur filter.
 - Bundled an immediate anti-slur fallback and extended filtering to outgoing slash commands.
+- Added remotely maintained player-name highlighting with configurable chat color and bold text.
 - Added Fabric builds for 1.21.11, 26.1.x, and 26.2.

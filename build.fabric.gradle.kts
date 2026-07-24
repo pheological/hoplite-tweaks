@@ -105,4 +105,7 @@ tasks.withType<ProcessResources>().configureEach {
 	from(rootProject.file("blocked-words.txt")) {
 		into("assets/hoplite_tweaks")
 	}
+	from(rootProject.file("highlighted-players.txt")) {
+		into("assets/hoplite_tweaks")
+	}
 }

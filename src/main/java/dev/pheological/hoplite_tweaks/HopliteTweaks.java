@@ -41,6 +41,7 @@ public final class HopliteTweaks {
         HopliteAutomation.initialize();
         HopliteNickDetector.initialize();
         AntiSlurFilter.initialize();
+        ChatNameHighlighter.initialize();
         LOGGER.info("Hoplite Tweaks initialized; features are gated to server addresses containing 'hoplite'");
     }
 }

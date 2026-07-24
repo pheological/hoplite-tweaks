@@ -1,0 +1,6 @@
+# Hoplite Tweaks highlighted players
+#
+# Add one Minecraft username per line. Names are matched case-insensitively.
+# Blank lines and lines beginning with # are ignored.
+
+PHEOLOGICAL

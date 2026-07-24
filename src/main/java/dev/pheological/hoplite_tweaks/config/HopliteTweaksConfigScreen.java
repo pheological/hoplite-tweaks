@@ -26,6 +26,7 @@ public final class HopliteTweaksConfigScreen {
             .title(text("Hoplite Tweaks"))
             .save(HopliteTweaksConfig::save)
             .category(generalCategory(config, defaults))
+            .category(highlightsCategory(config, defaults))
             .category(teamCategory(config, defaults))
             .category(cooldownCategory(config, defaults))
             .build()
@@ -86,6 +87,32 @@ public final class HopliteTweaksConfigScreen {
                     () -> config.partyMarkerColor, value -> config.partyMarkerColor = value))
                 .option(color("Teammate", "Marker color for regular teammates.", defaults.teammateMarkerColor,
                     () -> config.teammateMarkerColor, value -> config.teammateMarkerColor = value))
+                .build())
+            .build();
+    }
+
+    private static ConfigCategory highlightsCategory(
+        HopliteTweaksConfig config,
+        HopliteTweaksConfig defaults
+    ) {
+        return ConfigCategory.createBuilder()
+            .name(text("Highlights"))
+            .tooltip(text("Highlight selected player names in Hoplite chat."))
+            .group(OptionGroup.createBuilder()
+                .name(text("Chat names"))
+                .description(description(
+                    "The player list updates automatically from highlighted-players.txt in the Hoplite Tweaks repository."
+                ))
+                .option(toggle("Enable name highlights",
+                    "Highlights listed player names wherever they appear in Hoplite chat.",
+                    defaults.chatNameHighlights, () -> config.chatNameHighlights,
+                    value -> config.chatNameHighlights = value))
+                .option(color("Name color", "Color applied to highlighted player names.",
+                    defaults.chatNameHighlightColor, () -> config.chatNameHighlightColor,
+                    value -> config.chatNameHighlightColor = value))
+                .option(toggle("Bold names", "Displays highlighted player names in bold.",
+                    defaults.chatNameHighlightBold, () -> config.chatNameHighlightBold,
+                    value -> config.chatNameHighlightBold = value))
                 .build())
             .build();
     }
