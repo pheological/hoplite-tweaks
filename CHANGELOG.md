@@ -29,6 +29,7 @@
 - Removed the redundant cooldown accent bar and softened the card shape and spacing.
 - Stabilized shared-item hotbar cooldowns and added optional top cooldown bars.
 - Replaced top-bar cooldown titles with matching hotbar item models.
+- Lowered the Minecraft 1.21.11 Fabric API minimum to 0.141.3.
 - Added a remotely maintained, locally cached outgoing anti-slur filter.
 - Bundled an immediate anti-slur fallback and extended filtering to outgoing slash commands.
 - Added remotely maintained player-name highlighting with configurable chat color and bold text.
