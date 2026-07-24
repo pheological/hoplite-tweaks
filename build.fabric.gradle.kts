@@ -1,3 +1,5 @@
+import org.gradle.language.jvm.tasks.ProcessResources
+
 plugins {
 	id("mod-platform")
 	id("dev.kikugie.loom-back-compat")
@@ -97,4 +99,10 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
 	useJUnitPlatform()
+}
+
+tasks.withType<ProcessResources>().configureEach {
+	from(rootProject.file("blocked-words.txt")) {
+		into("assets/hoplite_tweaks")
+	}
 }

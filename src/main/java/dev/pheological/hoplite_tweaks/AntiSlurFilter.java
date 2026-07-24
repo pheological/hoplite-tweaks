@@ -7,6 +7,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -49,10 +50,12 @@ public final class AntiSlurFilter {
     }
 
     public static void initialize() {
+        loadBundledRules();
         loadCache();
         refresh();
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> refresh());
         ClientSendMessageEvents.ALLOW_CHAT.register(AntiSlurFilter::allowChatMessage);
+        ClientSendMessageEvents.ALLOW_COMMAND.register(AntiSlurFilter::allowCommandMessage);
     }
 
     public static void refresh() {
@@ -102,6 +105,14 @@ public final class AntiSlurFilter {
     }
 
     private static boolean allowChatMessage(String message) {
+        return allowOutgoingMessage(message);
+    }
+
+    private static boolean allowCommandMessage(String command) {
+        return allowOutgoingMessage(command);
+    }
+
+    private static boolean allowOutgoingMessage(String message) {
         HopliteTweaksConfig config = HopliteTweaksConfig.get();
         if (!config.enabled || !config.antiSlur || !HopliteSession.isActive() || !matches(message, rules)) {
             return true;
@@ -113,6 +124,24 @@ public final class AntiSlurFilter {
                     .withStyle(ChatFormatting.RED))
         );
         return false;
+    }
+
+    private static void loadBundledRules() {
+        try (InputStream stream = AntiSlurFilter.class.getResourceAsStream(
+            "/assets/hoplite_tweaks/blocked-words.txt"
+        )) {
+            if (stream == null) {
+                HopliteTweaks.LOGGER.warn("Bundled anti-slur list is missing");
+                return;
+            }
+            RuleSet bundled = parseRules(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
+            if (!bundled.blocked().isEmpty()) {
+                rules = bundled;
+                HopliteTweaks.LOGGER.info("Loaded {} bundled anti-slur rules", bundled.blocked().size());
+            }
+        } catch (Exception exception) {
+            HopliteTweaks.LOGGER.warn("Could not load the bundled anti-slur list");
+        }
     }
 
     private static void loadCache() {
