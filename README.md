@@ -1,9 +1,6 @@
 # Hoplite Tweaks
 
-Hoplite Tweaks is an all-in-one Fabric client mod for Hoplite. Every gameplay
-feature is guarded by one rule: the connected server address must contain
-`hoplite` (case-insensitive). Features clear their session state when the client
-disconnects and stay inert in single-player and on other servers.
+Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hoplite.
 
 ## Included features
 
