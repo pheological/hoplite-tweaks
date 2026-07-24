@@ -17,17 +17,22 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
 - Cooldown HUD
   - Receives Apollo display, remove, and reset cooldown messages.
   - Shows compact cards with readable timers and color-changing progress bars.
+  - Can show purely visual vanilla-style cooldown sweeps on matching hotbar items.
+  - Can render optional client-side top bars using matching hotbar item models.
 - Mod Menu configuration
   - Separate General, Team, and Cooldowns tabs.
-  - Independent feature toggles, sliders, role-color information, and reset-per-tab.
+  - Feature toggles, sliders, role-color information, and reset-per-tab.
   - Cooldown HUD position, scale, and compact-mode controls.
   - Persists to `config/hoplite-tweaks.json`.
 - Hoplite utilities
   - Party-message and mention pings.
   - Automatic party-chat switching after joining a party.
   - Weekly crate reminders and automatic pet selection.
-  - Royale nick detection with continuous player checks and rate-limited profile lookups.
+  - Optional automatic activation of Hoplite's clickable skin-application prompt.
+  - Optional double-tap protection against accidentally dropping a hotbar sword.
+  - Separate double-tap protection for recognized named legendary items.
   - Outgoing anti-slur protection backed by an automatically updated HTTPS text list and offline cache.
+  - Optional three-second chat queue for unranked players, detected from gray sender names in chat.
   - Per-player chat-name colors and bold styling backed by an automatically updated player list.
 
 ### Network disclosure
@@ -81,6 +86,7 @@ To collect distributable jars under the root `build/libs` directory:
 - `TeammateMarkerRenderer` renders billboarded world-space teammate markers.
 - `HopliteHud` renders cooldown data.
 - `DuelGlow` contains duel detection and team decisions.
+- Highlighted world nametags are restricted to active Hoplite connections.
 - `config/` owns persistence and the Mod Menu screen.
 - Stonecutter comments isolate API differences introduced in Minecraft 26.x.
 

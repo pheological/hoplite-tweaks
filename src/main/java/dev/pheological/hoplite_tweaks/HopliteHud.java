@@ -14,15 +14,18 @@ import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Comparator;
 import java.util.List;
 
 public final class HopliteHud {
-    private static final int PANEL = 0xCC10141D;
-    private static final int PANEL_EDGE = 0xFF263245;
-    private static final int MUTED = 0xFF9AA7B8;
+    private static final int COOLDOWN_BACKGROUND = 0xDD111721;
+    private static final int COOLDOWN_BORDER = 0xA037465C;
+    private static final int COOLDOWN_SHADOW = 0x66000000;
+    private static final int PROGRESS_TRACK = 0xB02B3546;
     private static final int WHITE = 0xFFF4F7FB;
 
     private HopliteHud() {
@@ -59,6 +62,144 @@ public final class HopliteHud {
         if (config.cooldownHud) {
             renderCooldowns(graphics, client.font, scale, config);
         }
+        if (config.showCooldownsInHotbar) {
+            renderHotbarCooldowns(graphics, client);
+        }
+        if (config.showCooldownsAtTop) {
+            renderTopCooldownBars(graphics, client);
+        }
+    }
+
+    private static void renderHotbarCooldowns(Object graphics, Minecraft client) {
+        List<ApolloModels.Cooldown> cooldowns = ApolloState.cooldowns().stream().toList();
+        if (cooldowns.isEmpty()) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        int firstSlotX = guiWidth(graphics) / 2 - 88;
+        int slotY = guiHeight(graphics) - 19;
+        for (int slot = 0; slot < 9; slot++) {
+            ItemStack stack = client.player.getInventory().getItem(slot);
+            if (stack.isEmpty()) {
+                continue;
+            }
+
+            String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+            float remaining = hotbarRemaining(cooldowns, itemId, now);
+            if (remaining <= 0.0F) {
+                continue;
+            }
+
+            int x = firstSlotX + slot * 20;
+            int overlayTop = slotY + (int) Math.floor(16.0F * (1.0F - remaining));
+            int overlayBottom = overlayTop + (int) Math.ceil(16.0F * remaining);
+            fill(graphics, x, overlayTop, x + 16, overlayBottom, 0x7FFFFFFF);
+        }
+    }
+
+    static float hotbarRemaining(
+        List<ApolloModels.Cooldown> cooldowns,
+        String itemId,
+        long now
+    ) {
+        return cooldowns.stream()
+            .filter(cooldown -> itemId.equals(cooldown.itemId()))
+            .filter(cooldown -> cooldown.remainingMillis(now) > 0)
+            .max(Comparator.comparingLong(cooldown ->
+                cooldown.startedAt() + cooldown.durationMillis()
+            ))
+            .map(cooldown -> 1.0F - cooldown.progress(now))
+            .orElse(0.0F);
+    }
+
+    private static void renderTopCooldownBars(Object graphics, Minecraft client) {
+        long now = System.currentTimeMillis();
+        int maxBars = Math.max(1, guiHeight(graphics) / 54);
+        List<ApolloModels.Cooldown> cooldowns = ApolloState.cooldowns().stream()
+            .sorted(Comparator.comparingLong(cooldown -> cooldown.remainingMillis(now)))
+            .limit(maxBars)
+            .toList();
+        if (cooldowns.isEmpty()) {
+            return;
+        }
+
+        int width = 182;
+        int x = (guiWidth(graphics) - width) / 2;
+        int y = 8;
+        for (ApolloModels.Cooldown cooldown : cooldowns) {
+            float remainingProgress = 1.0F - cooldown.progress(now);
+            int accent = progressColor(cooldown.progress(now));
+            String remaining = timeText(cooldown.remainingMillis(now));
+            int textX = (guiWidth(graphics) - client.font.width(remaining)) / 2;
+            ItemStack matchingItem = findHotbarItem(client, cooldown.name());
+
+            if (!matchingItem.isEmpty()) {
+                item(graphics, matchingItem, x - 20, y + 1);
+            }
+            text(graphics, client.font, remaining, textX, y, WHITE);
+            roundedFill(graphics, x + 1, y + 11, width, 7, COOLDOWN_SHADOW);
+            roundedFill(graphics, x, y + 10, width, 7, COOLDOWN_BORDER);
+            roundedFill(graphics, x + 1, y + 11, width - 2, 5, PROGRESS_TRACK);
+            int fillWidth = Math.round((width - 2) * remainingProgress);
+            if (fillWidth > 0) {
+                roundedFill(graphics, x + 1, y + 11, fillWidth, 5, accent);
+            }
+            y += 21;
+        }
+    }
+
+    private static ItemStack findHotbarItem(Minecraft client, String cooldownName) {
+        String normalizedCooldown = normalizeName(cooldownName);
+        if (normalizedCooldown.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack partialMatch = ItemStack.EMPTY;
+        for (int slot = 0; slot < 9; slot++) {
+            ItemStack stack = client.player.getInventory().getItem(slot);
+            if (stack.isEmpty()) {
+                continue;
+            }
+
+            String normalizedItem = normalizeName(stack.getHoverName().getString());
+            if (normalizedCooldown.equals(normalizedItem)) {
+                return stack;
+            }
+            if (partialMatch.isEmpty()
+                && normalizedItem.length() >= 3
+                && (normalizedCooldown.contains(normalizedItem)
+                    || normalizedItem.contains(normalizedCooldown))) {
+                partialMatch = stack;
+            }
+        }
+        return partialMatch;
+    }
+
+    static String normalizeName(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+
+        StringBuilder normalized = new StringBuilder(value.length());
+        boolean pendingSpace = false;
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            if (character == '\u00A7' && index + 1 < value.length()) {
+                index++;
+                continue;
+            }
+            if (Character.isLetterOrDigit(character)) {
+                if (pendingSpace && !normalized.isEmpty()) {
+                    normalized.append(' ');
+                }
+                normalized.append(Character.toLowerCase(character));
+                pendingSpace = false;
+            } else {
+                pendingSpace = true;
+            }
+        }
+        return normalized.toString();
     }
 
     private static int renderCooldowns(
@@ -75,44 +216,43 @@ public final class HopliteHud {
             return 0;
         }
 
-        int width = Math.round((compact ? 112 : 148) * scale);
-        int rowHeight = Math.round((compact ? 23 : 30) * scale);
-        int header = Math.round(21 * scale);
-        int height = header + cooldowns.size() * rowHeight + Math.round(5 * scale);
+        int width = Math.round((compact ? 100 : 126) * scale);
+        int rowHeight = Math.round((compact ? 17 : 21) * scale);
+        int gap = Math.max(1, Math.round(2 * scale));
+        int height = cooldowns.size() * rowHeight + Math.max(0, cooldowns.size() - 1) * gap;
         int x = Math.round(Math.max(0, guiWidth(graphics) - width) * config.hudXPercent / 100.0F);
         int y = Math.round(Math.max(0, guiHeight(graphics) - height) * config.hudYPercent / 100.0F);
-        panel(graphics, x, y, width, height);
-        text(graphics, font, Component.literal("COOLDOWNS"), x + 8, y + 7, MUTED);
 
         long now = System.currentTimeMillis();
-        int rowY = y + header;
+        int rowY = y;
         for (ApolloModels.Cooldown cooldown : cooldowns) {
             float progress = cooldown.progress(now);
             long remaining = cooldown.remainingMillis(now);
             int accent = progressColor(progress);
-            int innerX = x + Math.round(7 * scale);
-            int innerWidth = width - Math.round(14 * scale);
 
-            fill(graphics, innerX, rowY, innerX + innerWidth, rowY + rowHeight - 3, 0xB819202C);
-            fill(graphics, innerX, rowY, innerX + Math.round(3 * scale), rowY + rowHeight - 3, accent);
-            text(graphics, font, abbreviate(cooldown.name(), compact ? 13 : 19), innerX + 7, rowY + 4, WHITE);
-            text(graphics, font, timeText(remaining), innerX + innerWidth - 28, rowY + 4, accent);
+            roundedFill(graphics, x + 1, rowY + 2, width, rowHeight, COOLDOWN_SHADOW);
+            roundedFill(graphics, x, rowY, width, rowHeight, COOLDOWN_BORDER);
+            roundedFill(graphics, x + 1, rowY + 1, width - 2, rowHeight - 2, COOLDOWN_BACKGROUND);
+            fill(graphics, x + 4, rowY + 1, x + width - 4, rowY + 2, 0x20FFFFFF);
 
-            int barY = rowY + rowHeight - 7;
-            fill(graphics, innerX + 7, barY, innerX + innerWidth - 5, barY + 2, 0xFF303B4D);
-            int available = innerWidth - 12;
-            fill(graphics, innerX + 7, barY, innerX + 7 + Math.round(available * (1.0F - progress)), barY + 2, accent);
-            rowY += rowHeight;
+            int textY = rowY + Math.max(3, Math.round((rowHeight - 9) / 2.0F));
+            text(graphics, font, abbreviate(cooldown.name(), compact ? 11 : 15), x + 6, textY, WHITE);
+            String time = timeText(remaining);
+            int badgeWidth = font.width(time) + 8;
+            int badgeX = x + width - badgeWidth - 3;
+            roundedFill(graphics, badgeX, rowY + 3, badgeWidth, rowHeight - 7,
+                withAlpha(accent, 0x2E));
+            text(graphics, font, time, badgeX + 4, textY, accent);
+
+            int trackWidth = width - 10;
+            int progressWidth = Math.round(trackWidth * (1.0F - progress));
+            fill(graphics, x + 5, rowY + rowHeight - 3, x + width - 5, rowY + rowHeight - 1,
+                PROGRESS_TRACK);
+            fill(graphics, x + 5, rowY + rowHeight - 3, x + 5 + progressWidth,
+                rowY + rowHeight - 1, accent);
+            rowY += rowHeight + gap;
         }
         return y + height;
-    }
-
-    private static void panel(Object graphics, int x, int y, int width, int height) {
-        fill(graphics, x, y, x + width, y + height, PANEL);
-        fill(graphics, x, y, x + width, y + 1, PANEL_EDGE);
-        fill(graphics, x, y + height - 1, x + width, y + height, PANEL_EDGE);
-        fill(graphics, x, y, x + 1, y + height, PANEL_EDGE);
-        fill(graphics, x + width - 1, y, x + width, y + height, PANEL_EDGE);
     }
 
     private static int guiWidth(Object graphics) {
@@ -139,6 +279,22 @@ public final class HopliteHud {
         //?}
     }
 
+    private static void roundedFill(
+        Object graphics,
+        int x,
+        int y,
+        int width,
+        int height,
+        int color
+    ) {
+        if (width <= 2 || height <= 2) {
+            fill(graphics, x, y, x + width, y + height, color);
+            return;
+        }
+        fill(graphics, x + 1, y, x + width - 1, y + height, color);
+        fill(graphics, x, y + 1, x + width, y + height - 1, color);
+    }
+
     private static void text(Object graphics, Font font, Component value, int x, int y, int color) {
         //? >=26 {
         /*((GuiGraphicsExtractor) graphics).text(font, value, x, y, color, false);
@@ -155,6 +311,14 @@ public final class HopliteHud {
         //?}
     }
 
+    private static void item(Object graphics, ItemStack stack, int x, int y) {
+        //? >=26 {
+        /*((GuiGraphicsExtractor) graphics).item(stack, x, y);
+        *///?} else {
+        ((GuiGraphics) graphics).renderItem(stack, x, y);
+        //?}
+    }
+
     private static int progressColor(float progress) {
         if (progress < 0.5F) {
             return 0xFFFF6B7A;
@@ -163,6 +327,10 @@ public final class HopliteHud {
             return 0xFFFFCA62;
         }
         return 0xFF54D6A2;
+    }
+
+    private static int withAlpha(int color, int alpha) {
+        return alpha << 24 | color & 0x00FFFFFF;
     }
 
     private static boolean isGuiHidden(Minecraft client) {

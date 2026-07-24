@@ -44,7 +44,7 @@ public final class ApolloState {
         COOLDOWNS.remove(name);
     }
 
-    static void clearCooldowns() {
+    public static void clearCooldowns() {
         COOLDOWNS.clear();
     }
 

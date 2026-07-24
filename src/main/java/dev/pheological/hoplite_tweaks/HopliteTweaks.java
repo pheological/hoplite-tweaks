@@ -39,8 +39,10 @@ public final class HopliteTweaks {
         HopliteHud.initialize();
         TeammateMarkerRenderer.initialize();
         HopliteAutomation.initialize();
-        HopliteNickDetector.initialize();
+        AutoApplySkins.initialize();
         AntiSlurFilter.initialize();
+        NonRankDetector.initialize();
+        MessageDelay.initialize();
         ChatNameHighlighter.initialize();
         LOGGER.info("Hoplite Tweaks initialized; features are gated to server addresses containing 'hoplite'");
     }

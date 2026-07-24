@@ -26,7 +26,6 @@ public final class HopliteTweaksConfigScreen {
             .title(text("Hoplite Tweaks"))
             .save(HopliteTweaksConfig::save)
             .category(generalCategory(config, defaults))
-            .category(highlightsCategory(config, defaults))
             .category(teamCategory(config, defaults))
             .category(cooldownCategory(config, defaults))
             .build()
@@ -91,26 +90,6 @@ public final class HopliteTweaksConfigScreen {
             .build();
     }
 
-    private static ConfigCategory highlightsCategory(
-        HopliteTweaksConfig config,
-        HopliteTweaksConfig defaults
-    ) {
-        return ConfigCategory.createBuilder()
-            .name(text("Highlights"))
-            .tooltip(text("Highlight selected player names in Hoplite chat."))
-            .group(OptionGroup.createBuilder()
-                .name(text("Chat names"))
-                .description(description(
-                    "Names, hex colors, and bold styling update automatically from highlighted-players.txt."
-                ))
-                .option(toggle("Enable name highlights",
-                    "Highlights listed player names wherever they appear in Hoplite chat.",
-                    defaults.chatNameHighlights, () -> config.chatNameHighlights,
-                    value -> config.chatNameHighlights = value))
-                .build())
-            .build();
-    }
-
     private static ConfigCategory cooldownCategory(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
         return ConfigCategory.createBuilder()
             .name(text("Cooldowns"))
@@ -119,6 +98,14 @@ public final class HopliteTweaksConfigScreen {
                 .name(text("Cooldown HUD"))
                 .option(toggle("Enable cooldown HUD", "Displays active item and ability cooldowns.",
                     defaults.cooldownHud, () -> config.cooldownHud, value -> config.cooldownHud = value))
+                .option(toggle("Show in hotbar",
+                    "Shows a visual cooldown sweep over matching hotbar items without blocking item use.",
+                    defaults.showCooldownsInHotbar, () -> config.showCooldownsInHotbar,
+                    value -> config.showCooldownsInHotbar = value))
+                .option(toggle("Show top bars",
+                    "Shows client-side top bars using matching hotbar item models.",
+                    defaults.showCooldownsAtTop, () -> config.showCooldownsAtTop,
+                    value -> config.showCooldownsAtTop = value))
                 .option(toggle("Compact cards", "Uses smaller cooldown cards.",
                     defaults.compactCooldowns, () -> config.compactCooldowns,
                     value -> config.compactCooldowns = value))
@@ -173,6 +160,9 @@ public final class HopliteTweaksConfigScreen {
                 .option(toggle("Anti-slur",
                     "Stops blocked words and phrases from being sent. The moderation list updates automatically.",
                     defaults.antiSlur, () -> config.antiSlur, value -> config.antiSlur = value))
+                .option(toggle("Message delay",
+                    "Queues messages and sends them 3 seconds apart. (only applies to nons)",
+                    defaults.messageDelay, () -> config.messageDelay, value -> config.messageDelay = value))
                 .option(toggle("Weekly crate reminder",
                     "Five seconds after joining Hoplite, reminds you once per Pacific calendar week after 1:00 AM.",
                     defaults.weeklyCrateReminder, () -> config.weeklyCrateReminder,
@@ -183,9 +173,18 @@ public final class HopliteTweaksConfigScreen {
                 .option(toggle("Auto Pet",
                     "Automatically pets the battle-bus dragon when the drop prompt appears.",
                     defaults.autoPet, () -> config.autoPet, value -> config.autoPet = value))
-                .option(toggle("Royale nick detector",
-                    "Flags valid-looking tab names that have no public Minecraft profile during Royale games.",
-                    defaults.nickDetector, () -> config.nickDetector, value -> config.nickDetector = value))
+                .option(toggle("Auto apply skins",
+                    "Automatically clicks Hoplite's “click here to apply” skin prompt.",
+                    defaults.autoApplySkins, () -> config.autoApplySkins,
+                    value -> config.autoApplySkins = value))
+                .option(toggle("Double tap to drop sword",
+                    "Requires two drop-key presses within 600 ms to drop a sword from the hotbar.",
+                    defaults.doubleTapSwordDrop, () -> config.doubleTapSwordDrop,
+                    value -> config.doubleTapSwordDrop = value))
+                .option(toggle("Double tap to drop legendary",
+                    "Requires two drop-key presses within 600 ms to drop a recognized legendary from the hotbar.",
+                    defaults.doubleTapLegendaryDrop, () -> config.doubleTapLegendaryDrop,
+                    value -> config.doubleTapLegendaryDrop = value))
                 .build())
             .build();
     }

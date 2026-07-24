@@ -17,7 +17,18 @@
 - Added redesigned Apollo cooldown HUD.
 - Added Mod Menu configuration with persistent toggles and layout controls.
 - Added party-message pings, automatic party chat, weekly crate reminders,
-  automatic pet selection, and Royale nick detection.
+  and automatic pet selection.
+- Added gray-name non-rank detection and an optional three-second outgoing chat queue.
+- Simplified the cooldown HUD into smaller translucent rows.
+- Added an optional, purely visual cooldown sweep for matching hotbar items.
+- Restricted highlighted world nametags to Hoplite and added optional automatic skin application.
+- Added optional double-tap protection for dropping swords from the hotbar.
+- Added first-tap feedback and separate named-legendary drop protection.
+- Enabled skin application and both drop protections by default, with a one-time migration.
+- Refined cooldown cards with shadows, borders, timer badges, and a clearer progress track.
+- Removed the redundant cooldown accent bar and softened the card shape and spacing.
+- Stabilized shared-item hotbar cooldowns and added optional top cooldown bars.
+- Replaced top-bar cooldown titles with matching hotbar item models.
 - Added a remotely maintained, locally cached outgoing anti-slur filter.
 - Bundled an immediate anti-slur fallback and extended filtering to outgoing slash commands.
 - Added remotely maintained player-name highlighting with configurable chat color and bold text.

@@ -14,9 +14,11 @@ import net.minecraft.network.chat.Component;
  * Lightweight visual editor for positioning the cooldown overlay.
  */
 public final class CooldownHudEditorScreen extends Screen {
-    private static final int PANEL = 0xE610141D;
     private static final int PANEL_EDGE = 0xFF4A607E;
-    private static final int ROW = 0xE819202C;
+    private static final int ROW = 0xDD111721;
+    private static final int ROW_BORDER = 0xA037465C;
+    private static final int ROW_SHADOW = 0x66000000;
+    private static final int PROGRESS_TRACK = 0xB02B3546;
     private static final int MUTED = 0xFF9AA7B8;
     private static final int WHITE = 0xFFF4F7FB;
     private static final int RED = 0xFFFF6B7A;
@@ -102,13 +104,13 @@ public final class CooldownHudEditorScreen extends Screen {
 
     private int previewWidth() {
         float scale = HopliteTweaksConfig.get().hudScalePercent / 100.0F;
-        return Math.round((HopliteTweaksConfig.get().compactCooldowns ? 112 : 148) * scale);
+        return Math.round((HopliteTweaksConfig.get().compactCooldowns ? 100 : 126) * scale);
     }
 
     private int previewHeight() {
         float scale = HopliteTweaksConfig.get().hudScalePercent / 100.0F;
-        int rowHeight = Math.round((HopliteTweaksConfig.get().compactCooldowns ? 23 : 30) * scale);
-        return Math.round(26 * scale) + rowHeight * 2;
+        int rowHeight = Math.round((HopliteTweaksConfig.get().compactCooldowns ? 17 : 21) * scale);
+        return rowHeight * 2 + Math.max(1, Math.round(2 * scale));
     }
 
     @Override
@@ -152,14 +154,12 @@ public final class CooldownHudEditorScreen extends Screen {
         int width = previewWidth();
         int height = previewHeight();
         float scale = HopliteTweaksConfig.get().hudScalePercent / 100.0F;
-        int header = Math.round(21 * scale);
-        int rowHeight = Math.round((HopliteTweaksConfig.get().compactCooldowns ? 23 : 30) * scale);
+        int rowHeight = Math.round((HopliteTweaksConfig.get().compactCooldowns ? 17 : 21) * scale);
+        int gap = Math.max(1, Math.round(2 * scale));
 
-        fill(graphics, x, y, x + width, y + height, PANEL);
         outline(graphics, x, y, width, height, dragging ? 0xFF74B9FF : PANEL_EDGE);
-        text(graphics, Component.literal("COOLDOWNS"), x + 8, y + 7, MUTED);
-        previewRow(graphics, x, y + header, width, rowHeight, "Ender Pearl", "14s", RED, 0.75F);
-        previewRow(graphics, x, y + header + rowHeight, width, rowHeight, "Mace", "2.1", GREEN, 0.18F);
+        previewRow(graphics, x, y, width, rowHeight, "Ender Pearl", "14s", RED, 0.75F);
+        previewRow(graphics, x, y + rowHeight + gap, width, rowHeight, "Mace", "2.1", GREEN, 0.18F);
     }
 
     private void previewRow(
@@ -173,15 +173,26 @@ public final class CooldownHudEditorScreen extends Screen {
         int color,
         float bar
     ) {
-        int innerX = x + 7;
-        int innerWidth = width - 14;
-        fill(graphics, innerX, y, innerX + innerWidth, y + rowHeight - 3, ROW);
-        fill(graphics, innerX, y, innerX + 3, y + rowHeight - 3, color);
-        text(graphics, Component.literal(name), innerX + 7, y + 4, WHITE);
-        text(graphics, Component.literal(time), innerX + innerWidth - 28, y + 4, color);
-        int barY = y + rowHeight - 7;
-        fill(graphics, innerX + 7, barY, innerX + innerWidth - 5, barY + 2, 0xFF303B4D);
-        fill(graphics, innerX + 7, barY, innerX + 7 + Math.round((innerWidth - 12) * bar), barY + 2, color);
+        roundedFill(graphics, x + 1, y + 2, width, rowHeight, ROW_SHADOW);
+        roundedFill(graphics, x, y, width, rowHeight, ROW_BORDER);
+        roundedFill(graphics, x + 1, y + 1, width - 2, rowHeight - 2, ROW);
+        fill(graphics, x + 4, y + 1, x + width - 4, y + 2, 0x20FFFFFF);
+        int textY = y + Math.max(3, Math.round((rowHeight - 9) / 2.0F));
+        text(graphics, Component.literal(name), x + 6, textY, WHITE);
+        int badgeWidth = font.width(time) + 8;
+        int badgeX = x + width - badgeWidth - 3;
+        roundedFill(graphics, badgeX, y + 3, badgeWidth, rowHeight - 7,
+            withAlpha(color, 0x2E));
+        text(graphics, Component.literal(time), badgeX + 4, textY, color);
+        int trackWidth = width - 10;
+        fill(graphics, x + 5, y + rowHeight - 3, x + width - 5, y + rowHeight - 1,
+            PROGRESS_TRACK);
+        fill(graphics, x + 5, y + rowHeight - 3,
+            x + 5 + Math.round(trackWidth * bar), y + rowHeight - 1, color);
+    }
+
+    private static int withAlpha(int color, int alpha) {
+        return alpha << 24 | color & 0x00FFFFFF;
     }
 
     private static void outline(Object graphics, int x, int y, int width, int height, int color) {
@@ -197,6 +208,22 @@ public final class CooldownHudEditorScreen extends Screen {
         *///?} else {
         ((GuiGraphics) graphics).fill(left, top, right, bottom, color);
         //?}
+    }
+
+    private static void roundedFill(
+        Object graphics,
+        int x,
+        int y,
+        int width,
+        int height,
+        int color
+    ) {
+        if (width <= 2 || height <= 2) {
+            fill(graphics, x, y, x + width, y + height, color);
+            return;
+        }
+        fill(graphics, x + 1, y, x + width - 1, y + height, color);
+        fill(graphics, x, y + 1, x + width, y + height - 1, color);
     }
 
     private void text(Object graphics, Component value, int x, int y, int color) {

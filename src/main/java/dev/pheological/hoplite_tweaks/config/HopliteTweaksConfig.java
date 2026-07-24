@@ -2,6 +2,8 @@ package dev.pheological.hoplite_tweaks.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dev.pheological.hoplite_tweaks.HopliteTweaks;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -11,24 +13,30 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
+    private static final int CURRENT_CONFIG_VERSION = 1;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("hoplite-tweaks.json");
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
 
+    public int configVersion = CURRENT_CONFIG_VERSION;
     public boolean enabled = true;
     public boolean teammateMarkers = true;
     public boolean showTeammateName = true;
     public boolean duelTeamGlow = true;
     public boolean cooldownHud = true;
+    public boolean showCooldownsInHotbar = true;
+    public boolean showCooldownsAtTop = false;
     public boolean showTeammateDistance = true;
     public boolean compactCooldowns = false;
     public boolean partyMessagePing = true;
     public boolean autoPartyChat = false;
     public boolean weeklyCrateReminder = true;
     public boolean autoPet = true;
-    public boolean nickDetector = true;
+    public boolean autoApplySkins = true;
+    public boolean doubleTapSwordDrop = true;
+    public boolean doubleTapLegendaryDrop = true;
     public boolean antiSlur = true;
-    public boolean chatNameHighlights = true;
+    public boolean messageDelay = false;
     public int markerScalePercent = 100;
     public int markerHeightPercent = 35;
     public int markerMaxDistance = 500;
@@ -51,11 +59,15 @@ public final class HopliteTweaksConfig {
     }
 
     public static void load() {
+        boolean migrated = false;
         if (Files.exists(PATH)) {
             try (Reader reader = Files.newBufferedReader(PATH)) {
-                HopliteTweaksConfig loaded = GSON.fromJson(reader, HopliteTweaksConfig.class);
+                JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+                HopliteTweaksConfig loaded = GSON.fromJson(json, HopliteTweaksConfig.class);
                 if (loaded != null) {
                     instance = loaded;
+                    migrated = !json.has("configVersion")
+                        || json.get("configVersion").getAsInt() < CURRENT_CONFIG_VERSION;
                 }
             } catch (Exception exception) {
                 HopliteTweaks.LOGGER.warn("Could not read {}; defaults will be used", PATH, exception);
@@ -69,7 +81,17 @@ public final class HopliteTweaksConfig {
             instance.hudXPercent = 100;
             instance.hudYPercent = 100;
         }
+        if (migrated || instance.configVersion < CURRENT_CONFIG_VERSION) {
+            instance.autoApplySkins = true;
+            instance.doubleTapSwordDrop = true;
+            instance.doubleTapLegendaryDrop = true;
+            instance.configVersion = CURRENT_CONFIG_VERSION;
+            migrated = true;
+        }
         instance.clamp();
+        if (migrated) {
+            save();
+        }
     }
 
     public static void save() {

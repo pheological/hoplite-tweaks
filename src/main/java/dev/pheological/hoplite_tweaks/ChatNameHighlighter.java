@@ -112,7 +112,7 @@ public final class ChatNameHighlighter {
      */
     public static Component highlightForDisplay(Component message) {
         HopliteTweaksConfig config = HopliteTweaksConfig.get();
-        if (!config.enabled || !config.chatNameHighlights || !HopliteSession.isActive()) {
+        if (!config.enabled || !HopliteSession.isActive()) {
             return message;
         }
         return highlight(message, players);
@@ -229,6 +229,10 @@ public final class ChatNameHighlighter {
      * Applies the configured world nametag style for a player.
      */
     public static Component highlightNameTag(String username, Component nameTag) {
+        HopliteTweaksConfig config = HopliteTweaksConfig.get();
+        if (!config.enabled || !HopliteSession.isActive()) {
+            return nameTag;
+        }
         String normalized = username.toLowerCase(Locale.ROOT);
         List<PlayerHighlight> match = players.stream()
             .filter(entry -> entry.name().equals(normalized))
