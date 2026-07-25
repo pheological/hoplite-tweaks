@@ -180,8 +180,9 @@ public final class TeammateMarkerRenderer {
         }
 
         Component nameLabel = markerNameLabel(marker, config);
-        Component detailsLabel = markerDetailsLabel(marker, config);
-        if (nameLabel != null || detailsLabel != null) {
+        Component distanceLabel = markerDistanceLabel(marker, config);
+        Component healthLabel = markerHealthLabel(marker);
+        if (nameLabel != null || distanceLabel != null || healthLabel != null) {
             Minecraft client = Minecraft.getInstance();
             int background = config.markerTextBackground
                 ? (int) (client.options.getBackgroundOpacity(0.25F) * 255.0F) << 24
@@ -193,14 +194,68 @@ public final class TeammateMarkerRenderer {
             matrices.mulPose(cameraRotation);
             matrices.scale(textScale, -textScale, textScale);
             if (nameLabel != null) {
-                submitText(context, matrices, nameLabel, 0.0F, background);
+                submitCenteredText(context, matrices, nameLabel, 0.0F, background);
             }
-            if (detailsLabel != null) {
-                submitText(context, matrices, detailsLabel, nameLabel == null ? 0.0F : 10.0F, background);
+            if (distanceLabel != null || healthLabel != null) {
+                submitWidgetRow(
+                    context,
+                    matrices,
+                    distanceLabel,
+                    healthLabel,
+                    nameLabel == null ? 0.0F : 10.0F,
+                    background
+                );
             }
             matrices.popPose();
         }
         matrices.popPose();
+    }
+
+    //? >=26 {
+    /*private static void submitCenteredText(
+        LevelRenderContext context,
+    *///?} else {
+    private static void submitCenteredText(
+        WorldRenderContext context,
+    //?}
+        PoseStack matrices,
+        Component label,
+        float y,
+        int background
+    ) {
+        float x = -Minecraft.getInstance().font.width(label) / 2.0F;
+        submitText(context, matrices, label, x, y, background);
+    }
+
+    //? >=26 {
+    /*private static void submitWidgetRow(
+        LevelRenderContext context,
+    *///?} else {
+    private static void submitWidgetRow(
+        WorldRenderContext context,
+    //?}
+        PoseStack matrices,
+        Component left,
+        Component right,
+        float y,
+        int background
+    ) {
+        Font font = Minecraft.getInstance().font;
+        if (left == null) {
+            submitCenteredText(context, matrices, right, y, background);
+            return;
+        }
+        if (right == null) {
+            submitCenteredText(context, matrices, left, y, background);
+            return;
+        }
+
+        float gap = 4.0F;
+        float leftWidth = font.width(left);
+        float totalWidth = leftWidth + gap + font.width(right);
+        float startX = -totalWidth / 2.0F;
+        submitText(context, matrices, left, startX, y, background);
+        submitText(context, matrices, right, startX + leftWidth + gap, y, background);
     }
 
     //? >=26 {
@@ -212,10 +267,10 @@ public final class TeammateMarkerRenderer {
     //?}
         PoseStack matrices,
         Component label,
+        float x,
         float y,
         int background
     ) {
-        float x = -Minecraft.getInstance().font.width(label) / 2.0F;
         //? >=26 {
         /*context.submitNodeCollector().submitText(
         *///?} else {
@@ -252,17 +307,17 @@ public final class TeammateMarkerRenderer {
         switch (shape) {
             case INVERTED_TRIANGLE -> solidQuad(
                 vertices, pose, color,
-                -s, MARKER_HALF_HEIGHT,
-                s, MARKER_HALF_HEIGHT,
+                -0.025F, -MARKER_HALF_HEIGHT,
                 0.025F, -MARKER_HALF_HEIGHT,
-                -0.025F, -MARKER_HALF_HEIGHT
+                s, MARKER_HALF_HEIGHT,
+                -s, MARKER_HALF_HEIGHT
             );
             case TRIANGLE -> solidQuad(
                 vertices, pose, color,
-                -0.025F, MARKER_HALF_HEIGHT,
-                0.025F, MARKER_HALF_HEIGHT,
+                -s, -MARKER_HALF_HEIGHT,
                 s, -MARKER_HALF_HEIGHT,
-                -s, -MARKER_HALF_HEIGHT
+                0.025F, MARKER_HALF_HEIGHT,
+                -0.025F, MARKER_HALF_HEIGHT
             );
             case DIAMOND -> solidQuad(
                 vertices, pose, color,
@@ -314,30 +369,25 @@ public final class TeammateMarkerRenderer {
         }
         String name = abbreviate(marker.teammate.displayName(), 22);
         return Component.literal(name)
-            .withStyle(style -> style.withColor(config.markerNameColor & 0xFFFFFF));
+            .withStyle(style -> style.withColor(0xFFFFFF));
     }
 
-    private static Component markerDetailsLabel(Marker marker, HopliteTweaksConfig config) {
+    private static Component markerDistanceLabel(Marker marker, HopliteTweaksConfig config) {
         boolean showDistance = config.showTeammateDistance
             && !(marker.inRenderDistance && config.hideDistanceWhenTeammateInRenderDistance);
-        boolean showHealth = marker.health >= 0.0F;
-        if (!showDistance && !showHealth) {
+        if (!showDistance) {
             return null;
         }
+        return Component.literal(String.format(Locale.ROOT, "%.1fm", marker.distance))
+            .withStyle(style -> style.withColor(config.markerDistanceColor & 0xFFFFFF));
+    }
 
-        var details = Component.empty();
-        if (showDistance) {
-            details.append(Component.literal(String.format(Locale.ROOT, "%.1fm", marker.distance))
-                .withStyle(style -> style.withColor(config.markerDistanceColor & 0xFFFFFF)));
+    private static Component markerHealthLabel(Marker marker) {
+        if (marker.health < 0.0F) {
+            return null;
         }
-        if (showDistance && showHealth) {
-            details.append(Component.literal("  •  "));
-        }
-        if (showHealth) {
-            details.append(Component.literal(formatHealth(marker.health) + "❤")
-                .withStyle(style -> style.withColor(HEALTH_COLOR & 0xFFFFFF)));
-        }
-        return details;
+        return Component.literal(formatHealth(marker.health) + "❤")
+            .withStyle(style -> style.withColor(HEALTH_COLOR & 0xFFFFFF));
     }
 
     private static float tabHealth(Minecraft client, java.util.UUID playerId) {
