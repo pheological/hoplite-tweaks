@@ -97,8 +97,7 @@ public final class TeammateMarkerRenderer {
             .filter(teammate -> teammate.world().isBlank()
                 || teammate.world().toLowerCase(Locale.ROOT).endsWith(dimension.toLowerCase(Locale.ROOT)))
             .map(teammate -> marker(client, teammate, tickDelta, cameraPosition))
-            .filter(marker -> marker.distance >= config.markerMinDistance)
-            .filter(marker -> config.markerMaxDistance == 0 || marker.distance <= config.markerMaxDistance)
+            .filter(marker -> outsideMinimumDistance(marker.distance, config.markerMinDistance))
             .sorted(Comparator.comparingDouble((Marker marker) -> marker.distance).reversed())
             .forEach(marker -> drawMarker(context, matrices, cameraRotation, marker, config));
     }
@@ -437,6 +436,10 @@ public final class TeammateMarkerRenderer {
                 .replaceFirst("");
         Matcher number = NUMBER.matcher(withoutName);
         return number.find() ? parseHealth(number.group()) : -1.0F;
+    }
+
+    static boolean outsideMinimumDistance(double distance, int minimumDistance) {
+        return minimumDistance == 0 || distance > minimumDistance;
     }
 
     private static float parseHealth(String value) {

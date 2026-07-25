@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
-    private static final int CURRENT_CONFIG_VERSION = 2;
+    private static final int CURRENT_CONFIG_VERSION = 3;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("hoplite-tweaks.json");
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
@@ -41,8 +41,7 @@ public final class HopliteTweaksConfig {
     public boolean messageDelay = false;
     public int markerScalePercent = 100;
     public int markerHeightPercent = 35;
-    public int markerMaxDistance = 500;
-    public int markerMinDistance = 3;
+    public int markerMinDistance = 0;
     public int markerTextScalePercent = 100;
     public int kingMarkerColor = 0xFFFFD400;
     public int partyMarkerColor = 0xFF168CFF;
@@ -93,6 +92,9 @@ public final class HopliteTweaksConfig {
             instance.hideDistanceWhenTeammateInRenderDistance = true;
             instance.hideMarkerWhenTeammateInRenderDistance = true;
         }
+        if (loadedVersion < 3) {
+            instance.markerMinDistance = 0;
+        }
         boolean migrated = loadedVersion < CURRENT_CONFIG_VERSION;
         instance.configVersion = CURRENT_CONFIG_VERSION;
         instance.clamp();
@@ -124,8 +126,7 @@ public final class HopliteTweaksConfig {
         hudScalePercent = Math.clamp(hudScalePercent, 50, 200);
         markerScalePercent = Math.clamp(markerScalePercent, 50, 200);
         markerHeightPercent = Math.clamp(markerHeightPercent, 0, 200);
-        markerMaxDistance = Math.clamp(markerMaxDistance, 0, 2_000);
-        markerMinDistance = Math.clamp(markerMinDistance, 0, 32);
+        markerMinDistance = Math.clamp(markerMinDistance, 0, 2_000);
         markerTextScalePercent = Math.clamp(markerTextScalePercent, 50, 200);
         if (markerShape == null) {
             markerShape = MarkerShape.INVERTED_TRIANGLE;

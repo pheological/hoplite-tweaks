@@ -48,6 +48,14 @@ class TeammateMarkerRendererTest {
         );
     }
 
+    @Test
+    void minimumDistanceHidesTheWholeMarkerInsideItsRadius() {
+        assertEquals(true, TeammateMarkerRenderer.outsideMinimumDistance(1.0D, 0));
+        assertEquals(false, TeammateMarkerRenderer.outsideMinimumDistance(49.9D, 50));
+        assertEquals(false, TeammateMarkerRenderer.outsideMinimumDistance(50.0D, 50));
+        assertEquals(true, TeammateMarkerRenderer.outsideMinimumDistance(50.1D, 50));
+    }
+
     private int color(String name, int serverColor) {
         ApolloModels.Teammate teammate = new ApolloModels.Teammate(
             UUID.randomUUID(),

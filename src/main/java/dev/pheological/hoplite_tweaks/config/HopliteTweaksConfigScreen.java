@@ -57,11 +57,10 @@ public final class HopliteTweaksConfigScreen {
                 .option(slider("Height offset", "Moves the marker vertically above the player's head.",
                     defaults.markerHeightPercent, () -> config.markerHeightPercent,
                     value -> config.markerHeightPercent = value, 0, 200, 5))
-                .option(slider("Maximum distance", "Set to 0 for unlimited range.", defaults.markerMaxDistance,
-                    () -> config.markerMaxDistance, value -> config.markerMaxDistance = value, 0, 1000, 25))
-                .option(slider("Hide nearby markers", "Hides markers closer than this many blocks.",
+                .option(slider("Minimum distance",
+                    "Hides the entire teammate marker within this radius. Set to 0 to always show it.",
                     defaults.markerMinDistance, () -> config.markerMinDistance,
-                    value -> config.markerMinDistance = value, 0, 32, 1))
+                    value -> config.markerMinDistance = value, 0, 1000, 25))
                 .build())
             .group(OptionGroup.createBuilder()
                 .name(text("Name and distance"))
