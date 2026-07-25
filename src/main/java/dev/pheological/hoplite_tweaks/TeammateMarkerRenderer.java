@@ -20,6 +20,10 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.ReadOnlyScoreInfo;
+import net.minecraft.world.scores.ScoreHolder;
 import org.joml.Quaternionf;
 
 import java.util.Comparator;
@@ -41,6 +45,9 @@ public final class TeammateMarkerRenderer {
     private static final int FULL_BRIGHT = 0x00F000F0;
     private static final int HEALTH_COLOR = 0xFFFF6B7A;
     private static final float MARKER_HALF_SIZE = 0.18F;
+    private static final float MARKER_HALF_HEIGHT = 0.22F;
+    private static final float DIAMOND_HALF_HEIGHT = 0.30F;
+    private static final float MARKER_VERTICAL_OFFSET = 0.74F;
     private static final Pattern HEART_HEALTH = Pattern.compile(
         "(\\d+(?:\\.\\d+)?)\\s*(?:❤|♥|hp\\b)",
         Pattern.CASE_INSENSITIVE
@@ -156,6 +163,7 @@ public final class TeammateMarkerRenderer {
             && config.hideMarkerWhenTeammateInRenderDistance;
         if (!hideShape) {
             matrices.pushPose();
+            matrices.translate(0.0D, MARKER_VERTICAL_OFFSET * scale, 0.0D);
             matrices.mulPose(cameraRotation);
             matrices.scale((float) scale, (float) scale, (float) scale);
             //? >=26 {
@@ -242,9 +250,27 @@ public final class TeammateMarkerRenderer {
         }
 
         switch (shape) {
-            case INVERTED_TRIANGLE -> solidQuad(vertices, pose, color, -s, s, s, s, 0.0F, -s, 0.0F, -s);
-            case TRIANGLE -> solidQuad(vertices, pose, color, -s, -s, 0.0F, s, s, -s, s, -s);
-            case DIAMOND -> solidQuad(vertices, pose, color, 0.0F, -s, s, 0.0F, 0.0F, s, -s, 0.0F);
+            case INVERTED_TRIANGLE -> solidQuad(
+                vertices, pose, color,
+                -s, MARKER_HALF_HEIGHT,
+                s, MARKER_HALF_HEIGHT,
+                0.025F, -MARKER_HALF_HEIGHT,
+                -0.025F, -MARKER_HALF_HEIGHT
+            );
+            case TRIANGLE -> solidQuad(
+                vertices, pose, color,
+                -0.025F, MARKER_HALF_HEIGHT,
+                0.025F, MARKER_HALF_HEIGHT,
+                s, -MARKER_HALF_HEIGHT,
+                -s, -MARKER_HALF_HEIGHT
+            );
+            case DIAMOND -> solidQuad(
+                vertices, pose, color,
+                0.0F, -DIAMOND_HALF_HEIGHT,
+                s, 0.0F,
+                0.0F, DIAMOND_HALF_HEIGHT,
+                -s, 0.0F
+            );
             case SQUARE -> solidQuad(vertices, pose, color, -s, -s, s, -s, s, s, -s, s);
             case CHEVRON -> {
             }
@@ -319,7 +345,23 @@ public final class TeammateMarkerRenderer {
             return -1.0F;
         }
         PlayerInfo info = client.getConnection().getPlayerInfo(playerId);
-        if (info == null || info.getTabListDisplayName() == null) {
+        if (info == null) {
+            return -1.0F;
+        }
+        if (client.level != null) {
+            Objective tabObjective = client.level.getScoreboard()
+                .getDisplayObjective(DisplaySlot.LIST);
+            if (tabObjective != null) {
+                ReadOnlyScoreInfo score = client.level.getScoreboard().getPlayerScoreInfo(
+                    ScoreHolder.fromGameProfile(info.getProfile()),
+                    tabObjective
+                );
+                if (score != null) {
+                    return score.value();
+                }
+            }
+        }
+        if (info.getTabListDisplayName() == null) {
             return -1.0F;
         }
         return extractTabHealth(

@@ -32,6 +32,8 @@
 - Lowered the Minecraft 1.21.11 Fabric API minimum to 0.141.3.
 - Renamed Team settings to Team View and cleaned up nearby teammate markers.
 - Moved distance below teammate names and added health parsed from Hoplite's tab list.
+- Fixed triangle geometry, stretched diamonds vertically, and raised marker icons above labels.
+- Read teammate health from the tab scoreboard objective before falling back to display text.
 - Added a remotely maintained, locally cached outgoing anti-slur filter.
 - Bundled an immediate anti-slur fallback and extended filtering to outgoing slash commands.
 - Added remotely maintained player-name highlighting with configurable chat color and bold text.
