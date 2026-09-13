@@ -19,7 +19,7 @@ final class ApolloProtocolTest {
     }
 
     @Test
-    void decodesTeamUpdateEnvelope() {
+    void ignoresLegacyApolloTeamUpdateEnvelope() {
         UUID uuid = UUID.fromString("d7a7c32e-344a-4e78-b9cf-5d1b564d62fd");
         byte[] uuidMessage = message(
             varintField(1, uuid.getMostSignificantBits()),
@@ -39,10 +39,7 @@ final class ApolloProtocolTest {
         byte[] update = bytesField(1, member);
         ApolloProtocol.accept(any("type.googleapis.com/lunarclient.apollo.team.v1.UpdateTeamMembersMessage", update));
 
-        ApolloModels.Teammate teammate = ApolloState.teammates().iterator().next();
-        assertEquals(uuid, teammate.playerId());
-        assertEquals(12.5, teammate.x());
-        assertEquals("A teammate", teammate.displayName());
+        assertTrue(ApolloState.teammates().isEmpty());
     }
 
     @Test

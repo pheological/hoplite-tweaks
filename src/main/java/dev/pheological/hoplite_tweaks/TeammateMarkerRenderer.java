@@ -32,9 +32,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Renders Apollo teammates as camera-facing markers in the world.
+ * Renders packet-provided teammates as camera-facing markers in the world.
  *
- * <p>The renderer intentionally owns its own geometry and only uses Apollo's
+ * <p>The renderer intentionally owns its own geometry and only uses Hoplite's
  * public wire data. It does not share implementation code with Teammates.</p>
  */
 public final class TeammateMarkerRenderer {
@@ -113,7 +113,7 @@ public final class TeammateMarkerRenderer {
             .findFirst()
             .orElse(null);
         Vec3 worldPosition = loaded == null
-            ? new Vec3(teammate.x(), teammate.y(), teammate.z())
+            ? ApolloState.teammatePosition(teammate)
             : loaded.getPosition(tickDelta);
         return new Marker(
             teammate,

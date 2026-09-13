@@ -1,0 +1,11 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "hoplite_tweaks:font/kill.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": ["\uE000"]
+    }
+  ]
+}

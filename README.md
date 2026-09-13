@@ -4,17 +4,18 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
 
 ## Included features
 
-- Apollo teammate support
-  - Receives Hoplite's `lunar:apollo` team packets.
+- Hoplite teammate support
+  - Receives Hoplite's authoritative `hoplite-addons:update_teammates` and reset packets.
   - Renders a camera-facing chevron above each teammate in the world.
   - Displays tab-list health and live distance beneath the teammate name.
+  - Uses live player positions nearby and exact server-provided positions at distance.
   - Can hide nearby marker shapes and distance while retaining health.
   - Uses Hoplite role colors: kings are yellow, party members are blue, and
     regular teammates are green.
   - Supports marker scale, height, visibility range, name, and distance controls.
 - Duel teammate glow
   - Outlines teammates in duel/competitive modes.
-  - Prefers Apollo team membership and falls back to the vanilla scoreboard team.
+  - Prefers Hoplite packet team membership and falls back to the vanilla scoreboard team.
 - Cooldown HUD
   - Receives Apollo display, remove, and reset cooldown messages.
   - Shows compact cards with readable timers and color-changing progress bars.
@@ -26,6 +27,8 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
   - Cooldown HUD position, scale, and compact-mode controls.
   - Persists to `config/hoplite-tweaks.json`.
 - Hoplite utilities
+  - Session kill tracking in tab, scoreboard, and configurable player nametags.
+  - Customizable multiplayer ping labels beside or above player nametags on every server.
   - Party-message and mention pings.
   - Automatic party-chat switching after joining a party.
   - Weekly crate reminders and automatic pet selection.
@@ -67,8 +70,9 @@ Each highlighted player line uses
 mentions are left unchanged.
 
 The feature implementation is original. The project contains a small,
-dependency-free protobuf wire reader for compatibility with the public Apollo
-packet format; it does not bundle Teamviewer or Coolite's implementation.
+dependency-free protobuf wire reader for Apollo cooldown compatibility and an
+independent codec for Hoplite's teammate payload schema; it does not bundle
+Teamviewer or Coolite's implementation.
 
 ## Supported versions
 
@@ -97,7 +101,7 @@ To collect distributable jars under the root `build/libs` directory:
 ## Architecture
 
 - `HopliteSession` is the mandatory server-address gate.
-- `apollo/` owns protocol decoding and short-lived session state.
+- `apollo/` owns cooldown decoding and shared short-lived marker state.
 - `TeammateMarkerRenderer` renders billboarded world-space teammate markers.
 - `HopliteHud` renders cooldown data.
 - `DuelGlow` contains duel detection and team decisions.

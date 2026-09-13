@@ -13,13 +13,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
-    private static final int CURRENT_CONFIG_VERSION = 3;
+    private static final int CURRENT_CONFIG_VERSION = 5;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("hoplite-tweaks.json");
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
 
     public int configVersion = CURRENT_CONFIG_VERSION;
     public boolean enabled = true;
+    public boolean killCounter = true;
+    public boolean trackKillsAfterMiningPhase = false;
+    public KillDisplay killDisplay = KillDisplay.BOTH;
+    public KillPlacement killPlacement = KillPlacement.NEXT_TO_NAME;
+    public boolean killScoreboard = true;
+    public boolean pingHeader = true;
+    public PingPosition pingPosition = PingPosition.APPEND_RIGHT;
+    public String pingLeftText = "(";
+    public String pingRightText = " ms)";
     public boolean supplyCrateBeams = true;
     public int supplyBeamArrivalRadius = 25;
     public int supplyBeamColor = 0xFFFFD400;
@@ -101,6 +110,14 @@ public final class HopliteTweaksConfig {
         if (loadedVersion < 3) {
             instance.markerMinDistance = 0;
         }
+        if (loadedVersion < 4) {
+            instance.pingHeader = true;
+            instance.pingLeftText = "(";
+            instance.pingRightText = " ms)";
+        }
+        if (loadedVersion < 5) {
+            instance.pingPosition = PingPosition.APPEND_RIGHT;
+        }
         boolean migrated = loadedVersion < CURRENT_CONFIG_VERSION;
         instance.configVersion = CURRENT_CONFIG_VERSION;
         instance.clamp();
@@ -127,6 +144,11 @@ public final class HopliteTweaksConfig {
     }
 
     private void clamp() {
+        if (killDisplay == null) killDisplay = KillDisplay.BOTH;
+        if (killPlacement == null) killPlacement = KillPlacement.NEXT_TO_NAME;
+        if (pingPosition == null) pingPosition = PingPosition.APPEND_RIGHT;
+        if (pingLeftText == null) pingLeftText = "(";
+        if (pingRightText == null) pingRightText = " ms)";
         supplyBeamArrivalRadius = Math.clamp(supplyBeamArrivalRadius, 0, 200);
         supplyBeamThicknessPercent = Math.clamp(supplyBeamThicknessPercent, 25, 500);
         supplyBeamHeight = Math.clamp(supplyBeamHeight, 32, 512);
@@ -144,6 +166,29 @@ public final class HopliteTweaksConfig {
         if (lastCrateReminderWeek == null) {
             lastCrateReminderWeek = "";
         }
+    }
+
+    public enum KillDisplay {
+        TAB_LIST("Tab list"), NAMETAG("Nametag"), BOTH("Both");
+        private final String label;
+        KillDisplay(String label) { this.label = label; }
+        public boolean tab() { return this != NAMETAG; }
+        public boolean nametag() { return this != TAB_LIST; }
+        @Override public String toString() { return label; }
+    }
+
+    public enum KillPlacement {
+        NEXT_TO_NAME("Next to name"), ABOVE_NAME("Above name");
+        private final String label;
+        KillPlacement(String label) { this.label = label; }
+        @Override public String toString() { return label; }
+    }
+
+    public enum PingPosition {
+        APPEND_RIGHT("Right of name"), APPEND_LEFT("Left of name"), ABOVE_NAME("Above head");
+        private final String label;
+        PingPosition(String label) { this.label = label; }
+        @Override public String toString() { return label; }
     }
 
     public enum MarkerShape {

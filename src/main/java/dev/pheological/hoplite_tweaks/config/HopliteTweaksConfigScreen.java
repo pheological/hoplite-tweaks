@@ -9,6 +9,7 @@ import dev.isxander.yacl3.api.YetAnotherConfigLib;
 import dev.isxander.yacl3.api.controller.ColorControllerBuilder;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
+import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.Minecraft;
@@ -34,6 +35,53 @@ public final class HopliteTweaksConfigScreen {
             .category(supplyCategory(config, defaults))
             .build()
             .generateScreen(parent);
+    }
+
+    private static OptionGroup killTrackerGroup(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
+        var placement = Option.<HopliteTweaksConfig.KillPlacement>createBuilder()
+            .name(text("Nametag position"))
+            .description(description("Place kills beside the name or on a separate line above it."))
+            .binding(defaults.killPlacement, () -> config.killPlacement, value -> config.killPlacement = value)
+            .controller(option -> EnumControllerBuilder.create(option).enumClass(HopliteTweaksConfig.KillPlacement.class))
+            .available(config.killDisplay.nametag()).build();
+        return OptionGroup.createBuilder()
+                .name(text("Kill Tracker"))
+                .description(description("Counts observed Hoplite eliminations while Game Stats is visible. Zero kills are hidden."))
+                .option(toggle("Kill Counter", "Display kills observed during this match. Tracking continues while hidden.",
+                    defaults.killCounter, () -> config.killCounter, value -> config.killCounter = value))
+                .option(toggle("Track only after mining phase", "Ignore eliminations while the scoreboard shows 'Mining Phase in:'.",
+                    defaults.trackKillsAfterMiningPhase, () -> config.trackKillsAfterMiningPhase,
+                    value -> config.trackKillsAfterMiningPhase = value))
+                .option(Option.<HopliteTweaksConfig.KillDisplay>createBuilder()
+                    .name(text("Show kills in"))
+                    .binding(defaults.killDisplay, () -> config.killDisplay, value -> config.killDisplay = value)
+                    .controller(option -> EnumControllerBuilder.create(option).enumClass(HopliteTweaksConfig.KillDisplay.class))
+                    .listener((option, value) -> placement.setAvailable(value.nametag())).build())
+                .option(placement)
+                .option(toggle("Show kills in scoreboard", "Add kills to the left of recognized player rows. Independent of tab and nametag selection.",
+                    defaults.killScoreboard, () -> config.killScoreboard, value -> config.killScoreboard = value))
+                .option(ButtonOption.createBuilder().name(text("Reset kill counts")).text(text("Reset"))
+                    .action(screen -> dev.pheological.hoplite_tweaks.KillCounter.reset()).build())
+                .build();
+    }
+
+    private static OptionGroup pingHeaderGroup(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
+        return OptionGroup.createBuilder()
+                .name(text("Ping Header"))
+                .description(description("Shows each player's current latency in their in-world nametag on multiplayer servers."))
+                .option(toggle("Show player ping", "Display ping to either side of player names or on the header line above.",
+                    defaults.pingHeader, () -> config.pingHeader, value -> config.pingHeader = value))
+                .option(Option.<HopliteTweaksConfig.PingPosition>createBuilder()
+                    .name(text("Ping position"))
+                    .description(description("Place ping to the right or left of the name, or on the header line above."))
+                    .binding(defaults.pingPosition, () -> config.pingPosition, value -> config.pingPosition = value)
+                    .controller(option -> EnumControllerBuilder.create(option).enumClass(HopliteTweaksConfig.PingPosition.class))
+                    .build())
+                .option(string("Text before ping", "Literal text placed before the number.",
+                    defaults.pingLeftText, () -> config.pingLeftText, value -> config.pingLeftText = value))
+                .option(string("Text after ping", "Literal text placed after the number.",
+                    defaults.pingRightText, () -> config.pingRightText, value -> config.pingRightText = value))
+                .build();
     }
 
     private static ConfigCategory supplyCategory(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
@@ -202,9 +250,12 @@ public final class HopliteTweaksConfigScreen {
             .group(OptionGroup.createBuilder()
                 .name(text("Core"))
                 .option(toggle("Enable Hoplite Tweaks",
-                    "Master switch. Features activate when the server address contains “hoplite”.",
+                    "Master switch. Hoplite features remain server-gated; Ping Header works on every multiplayer server.",
                     defaults.enabled, () -> config.enabled, value -> config.enabled = value))
-                .option(toggle("Team glow", "Adds the glowing outline to teammates in Hoplite duels.",
+                .build())
+            .group(OptionGroup.createBuilder()
+                .name(text("Duels"))
+                .option(toggle("Team Glow", "Adds the glowing outline to teammates in Hoplite duels.",
                     defaults.duelTeamGlow, () -> config.duelTeamGlow, value -> config.duelTeamGlow = value))
                 .build())
             .group(OptionGroup.createBuilder()
@@ -245,6 +296,8 @@ public final class HopliteTweaksConfigScreen {
                     defaults.doubleTapLegendaryDrop, () -> config.doubleTapLegendaryDrop,
                     value -> config.doubleTapLegendaryDrop = value))
                 .build())
+            .group(killTrackerGroup(config, defaults))
+            .group(pingHeaderGroup(config, defaults))
             .build();
     }
 
@@ -271,6 +324,18 @@ public final class HopliteTweaksConfigScreen {
             .controller(option -> IntegerSliderControllerBuilder.create(option)
                 .range(minimum, maximum)
                 .step(step))
+            .build();
+    }
+
+    private static Option<String> string(
+        String name, String description, String defaultValue, java.util.function.Supplier<String> getter,
+        java.util.function.Consumer<String> setter
+    ) {
+        return Option.<String>createBuilder()
+            .name(text(name))
+            .description(description(description))
+            .binding(defaultValue, getter, setter)
+            .controller(StringControllerBuilder::create)
             .build();
     }
 
