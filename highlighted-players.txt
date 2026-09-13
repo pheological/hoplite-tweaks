@@ -5,3 +5,4 @@
 # Names are matched case-insensitively. Blank lines and comments are ignored.
 
 PHEOLOGICAL #AA0000 bold #000000 normal
+MOGGEDBYINDIA #AA0000 bold #000000 normal
