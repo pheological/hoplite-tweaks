@@ -38,6 +38,7 @@ public final class HopliteTweaks {
 
         HopliteHud.initialize();
         TeammateMarkerRenderer.initialize();
+        SupplyBeams.initialize();
         HopliteAutomation.initialize();
         AutoApplySkins.initialize();
         AntiSlurFilter.initialize();

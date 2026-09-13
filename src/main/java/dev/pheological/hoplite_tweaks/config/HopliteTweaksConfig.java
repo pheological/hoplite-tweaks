@@ -20,6 +20,12 @@ public final class HopliteTweaksConfig {
 
     public int configVersion = CURRENT_CONFIG_VERSION;
     public boolean enabled = true;
+    public boolean supplyCrateBeams = true;
+    public int supplyBeamArrivalRadius = 25;
+    public int supplyBeamColor = 0xFFFFD400;
+    public int supplyBeamThicknessPercent = 100;
+    public int supplyBeamHeight = 256;
+    public int supplyBeamOpacityPercent = 65;
     public boolean teammateMarkers = true;
     public boolean showTeammateName = true;
     public boolean duelTeamGlow = true;
@@ -121,6 +127,10 @@ public final class HopliteTweaksConfig {
     }
 
     private void clamp() {
+        supplyBeamArrivalRadius = Math.clamp(supplyBeamArrivalRadius, 0, 200);
+        supplyBeamThicknessPercent = Math.clamp(supplyBeamThicknessPercent, 25, 500);
+        supplyBeamHeight = Math.clamp(supplyBeamHeight, 32, 512);
+        supplyBeamOpacityPercent = Math.clamp(supplyBeamOpacityPercent, 10, 100);
         hudXPercent = Math.clamp(hudXPercent, 0, 100);
         hudYPercent = Math.clamp(hudYPercent, 0, 100);
         hudScalePercent = Math.clamp(hudScalePercent, 50, 200);

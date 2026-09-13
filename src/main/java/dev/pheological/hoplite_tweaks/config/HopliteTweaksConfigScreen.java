@@ -11,6 +11,9 @@ import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
+import dev.pheological.hoplite_tweaks.SupplyBeams;
 import net.minecraft.network.chat.Component;
 
 import java.awt.Color;
@@ -28,8 +31,55 @@ public final class HopliteTweaksConfigScreen {
             .category(generalCategory(config, defaults))
             .category(teamCategory(config, defaults))
             .category(cooldownCategory(config, defaults))
+            .category(supplyCategory(config, defaults))
             .build()
             .generateScreen(parent);
+    }
+
+    private static ConfigCategory supplyCategory(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
+        return ConfigCategory.createBuilder()
+            .name(text("Supply Beams"))
+            .tooltip(text("Mark announced supply drops. Beams expire after five minutes."))
+            .option(toggle("Supply Crate Beams", "Show beams at tracked drops. Hidden beams still expire and clear on arrival.",
+                defaults.supplyCrateBeams, () -> config.supplyCrateBeams, value -> config.supplyCrateBeams = value))
+            .option(slider("Arrival radius (blocks)", "Permanently clear a drop when this close horizontally. Zero disables arrival clearing.",
+                defaults.supplyBeamArrivalRadius, () -> config.supplyBeamArrivalRadius,
+                value -> config.supplyBeamArrivalRadius = value, 0, 200, 1))
+            .option(color("Beam color", "Color of the supply crate beams.", defaults.supplyBeamColor,
+                () -> config.supplyBeamColor, value -> config.supplyBeamColor = value))
+            .option(Option.<Integer>createBuilder()
+                .name(text("Beam width (%)"))
+                .description(description("Apparent width on screen. Stays consistent as you move closer or farther away."))
+                .binding(defaults.supplyBeamThicknessPercent, () -> config.supplyBeamThicknessPercent,
+                    value -> config.supplyBeamThicknessPercent = value)
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(25, 500).step(25)
+                    .valueFormatter(value -> text(value + "%")))
+                .build())
+            .option(slider("Height (blocks)", "Height above the estimated or loaded ground surface.",
+                defaults.supplyBeamHeight, () -> config.supplyBeamHeight,
+                value -> config.supplyBeamHeight = value, 32, 512, 16))
+            .option(slider("Opacity (%)", "How opaque the beams appear.",
+                defaults.supplyBeamOpacityPercent, () -> config.supplyBeamOpacityPercent,
+                value -> config.supplyBeamOpacityPercent = value, 10, 100, 5))
+            .option(ButtonOption.createBuilder()
+                .name(text("Toggle keybind"))
+                .text(text("Open Controls"))
+                .description(description("Assign Toggle Supply Crate Beams under Hoplite Tweaks. Unassigned by default."))
+                .action(screen -> {
+                    Minecraft client = Minecraft.getInstance();
+                    //? >=26.2 {
+                    /*client.gui.setScreen(new KeyBindsScreen(screen, client.options));
+                    *///?} else {
+                    client.setScreen(new KeyBindsScreen(screen, client.options));
+                    //?}
+                })
+                .build())
+            .option(ButtonOption.createBuilder()
+                .name(text("Clear tracked drops"))
+                .text(text("Clear"))
+                .action(screen -> SupplyBeams.clearTrackedDrops())
+                .build())
+            .build();
     }
 
     private static ConfigCategory teamCategory(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
@@ -152,7 +202,7 @@ public final class HopliteTweaksConfigScreen {
             .group(OptionGroup.createBuilder()
                 .name(text("Core"))
                 .option(toggle("Enable Hoplite Tweaks",
-                    "Master switch. Features still only activate when the server address contains “hoplite”.",
+                    "Master switch. Features activate when the server address contains “hoplite”.",
                     defaults.enabled, () -> config.enabled, value -> config.enabled = value))
                 .option(toggle("Team glow", "Adds the glowing outline to teammates in Hoplite duels.",
                     defaults.duelTeamGlow, () -> config.duelTeamGlow, value -> config.duelTeamGlow = value))

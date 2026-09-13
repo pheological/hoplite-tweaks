@@ -21,7 +21,7 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
   - Can show purely visual vanilla-style cooldown sweeps on matching hotbar items.
   - Can render optional client-side top bars using matching hotbar item models.
 - Mod Menu configuration
-  - Separate General, Team View, and Cooldowns tabs.
+  - Separate General, Team View, Cooldowns, and Supply Beams tabs.
   - Feature toggles, sliders, role-color information, and reset-per-tab.
   - Cooldown HUD position, scale, and compact-mode controls.
   - Persists to `config/hoplite-tweaks.json`.
@@ -35,6 +35,20 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
   - Outgoing anti-slur protection backed by an automatically updated HTTPS text list and offline cache.
   - Optional three-second chat queue for unranked players, detected from gray sender names in chat.
   - Per-player chat-name colors and bold styling backed by an automatically updated player list.
+
+### Supply crate beams
+
+Supply Beams marks each Hoplite supply-drop announcement with a customizable beam, including
+locations outside loaded terrain. Beams use the announced X/Z coordinates and start at Y=64 until the
+destination chunk first loads. They then remember the actual surface height even when the chunk
+unloads, updating it if the terrain loads again. Beams have a bright core and soft outer glow, with
+a consistent apparent width at any distance. Color, screen width, height, and opacity are adjustable.
+Each beam expires after five minutes or clears permanently when you come within 25 horizontal
+blocks by default. Set the arrival radius to zero to disable arrival clearing.
+
+Assign **Toggle Supply Crate Beams** under **Controls → Key Binds → Hoplite Tweaks**; it is
+unassigned by default. Hiding beams does not stop tracking or expiration. The Supply Beams tab
+also provides a Controls shortcut and a button to clear tracked drops.
 
 ### Network disclosure
 
