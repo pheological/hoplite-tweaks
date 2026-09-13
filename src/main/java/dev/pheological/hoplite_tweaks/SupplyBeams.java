@@ -36,7 +36,7 @@ public final class SupplyBeams {
         // Server system chat only; player chat must never create a waypoint.
         ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
             Minecraft client = Minecraft.getInstance();
-            if (!overlay && HopliteSession.isActive() && client.player != null && client.level != null) {
+            if (HopliteSession.isActive() && client.player != null && client.level != null) {
                 syncWorld(client);
                 STATE.announce(SupplyBeamState.parse(message.getString()), now());
             }

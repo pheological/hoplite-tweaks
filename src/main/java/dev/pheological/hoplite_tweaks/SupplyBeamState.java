@@ -2,17 +2,18 @@ package dev.pheological.hoplite_tweaks;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Session-only tracking, independent of Minecraft so lifecycle rules can be tested. */
 final class SupplyBeamState {
     static final double UNLOADED_GROUND_Y = 64.0D;
     static final long LIFETIME_MS = 5 * 60 * 1000L;
-    private static final Pattern ANNOUNCEMENT = Pattern.compile(
-        "^[!⚠❗‼\\s]*A supply drop is spawning near you at X\\s*=\\s*([+-]?\\d+)\\s+"
-            + "and Z\\s*=\\s*([+-]?\\d+)\\s*Use your Supply Drop Tracker to\\s+"
-            + "navigate towards its location[.!]?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern COORDINATE = Pattern.compile(
+        "(?i)(?<![a-z0-9_])([xz])\\s*[:=]\\s*([+-]?\\d+)"
+    );
     private final Map<Location, Drop> drops = new LinkedHashMap<>();
     // Keep recently cleared locations too, so duplicate delivery cannot resurrect a visited drop.
     private final Map<Location, Long> seen = new LinkedHashMap<>();
@@ -24,11 +25,23 @@ final class SupplyBeamState {
     static Location parse(String message) {
         if (message == null) return null;
         String plain = message.replaceAll("(?i)§[0-9a-fk-orx]", "").replaceAll("\\s+", " ").trim();
-        var match = ANNOUNCEMENT.matcher(plain);
-        if (!match.matches()) return null;
+        if (!plain.toLowerCase(Locale.ROOT).contains("supply drop")) return null;
+
+        Integer x = null;
+        Integer z = null;
         try {
-            int x = Integer.parseInt(match.group(1));
-            int z = Integer.parseInt(match.group(2));
+            Matcher match = COORDINATE.matcher(plain);
+            while (match.find()) {
+                int value = Integer.parseInt(match.group(2));
+                if (match.group(1).equalsIgnoreCase("x")) {
+                    if (x != null && x != value) return null;
+                    x = value;
+                } else {
+                    if (z != null && z != value) return null;
+                    z = value;
+                }
+            }
+            if (x == null || z == null) return null;
             if (Math.abs((long) x) > 30_000_000 || Math.abs((long) z) > 30_000_000) return null;
             return new Location(x, z);
         } catch (NumberFormatException ignored) {

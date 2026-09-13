@@ -20,12 +20,22 @@ class SupplyBeamStateTest {
     }
 
     @Test
+    void toleratesChangedWordingPunctuationAndCoordinateOrder() {
+        assertEquals(new SupplyBeamState.Location(-742, 136), SupplyBeamState.parse(
+            "Heads up! SUPPLY DROP incoming nearby: X = -742, Z: +136! Open your tracker."));
+        assertEquals(new SupplyBeamState.Location(18, -91), SupplyBeamState.parse(
+            "Supply drop coordinates updated (z=-91); destination x:18."));
+    }
+
+    @Test
     void rejectsPlayerChatMalformedAndOutOfRangeCoordinates() {
-        assertNull(SupplyBeamState.parse("Player: " + announcement("1", "2")));
+        assertNull(SupplyBeamState.parse("Player: Meet me at X=1 and Z=2"));
         assertNull(SupplyBeamState.parse(announcement("oops", "2")));
         assertNull(SupplyBeamState.parse(announcement("99999999999999999", "2")));
         assertNull(SupplyBeamState.parse(announcement("30000001", "2")));
         assertNull(SupplyBeamState.parse("Meet me at X=100 and Z=100"));
+        assertNull(SupplyBeamState.parse("Supply drop at X=100 with no Z coordinate"));
+        assertNull(SupplyBeamState.parse("Supply drop moved from X=100 to X=200, Z=300"));
         assertNull(SupplyBeamState.parse(null));
     }
 
