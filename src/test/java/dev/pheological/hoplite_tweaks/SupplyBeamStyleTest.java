@@ -31,4 +31,51 @@ class SupplyBeamStyleTest {
         assertTrue((core & 255) > (gold & 255));
         assertTrue((core >>> 8 & 255) > (gold >>> 8 & 255));
     }
+
+    @Test
+    void aimTargetFindsAnyHeightAlongBeamAndRejectsMisses() {
+        var middle = SupplyBeamStyle.aimTarget(0, 70, 0, 0, 0, 1, 0, 64, 100, 64, 100);
+        assertNotNull(middle);
+        assertEquals(6, middle.heightOffset(), 1e-10);
+        assertEquals(100, middle.rayDistance(), 1e-10);
+
+        assertNotNull(SupplyBeamStyle.aimTarget(0, 150, 0, 0, 0, 1, 0, 64, 100, 100, 100));
+        assertNotNull(SupplyBeamStyle.aimTarget(0, 150, 0, 0, 0, 1, 0, 64, 100, 80, 100));
+        assertNull(SupplyBeamStyle.aimTarget(0, 200, 0, 0, 0, 1, 0, 64, 100, 80, 100));
+        assertNull(SupplyBeamStyle.aimTarget(0, 70, 0, 0, 0, -1, 0, 64, 100, 64, 100));
+        assertNull(SupplyBeamStyle.aimTarget(0, 70, 0, 0, 0, 1, 20, 64, 100, 64, 100));
+    }
+
+    @Test
+    void aimTargetRespectsBeamWidthAndExposesDistanceForNearestSelection() {
+        assertNotNull(SupplyBeamStyle.aimTarget(0, 70, 0, 0, 0, 1, 17, 64, 100, 64, 100));
+        assertNull(SupplyBeamStyle.aimTarget(0, 70, 0, 0, 0, 1, 18, 64, 100, 64, 100));
+
+        // An unusually thick beam remains targetable across its entire visible width.
+        assertNotNull(SupplyBeamStyle.aimTarget(0, 70, 0, 0, 0, 1, 10, 64, 100, 64, 1000));
+
+        var near = SupplyBeamStyle.aimTarget(0, 70, 0, 0, 0, 1, 0, 64, 50, 64, 100);
+        var far = SupplyBeamStyle.aimTarget(0, 70, 0, 0, 0, 1, 0, 64, 100, 64, 100);
+        assertNotNull(near);
+        assertNotNull(far);
+        assertTrue(near.rayDistance() < far.rayDistance());
+    }
+
+    @Test
+    void aimTargetHandlesLookingVerticallyAlongBeam() {
+        var upward = SupplyBeamStyle.aimTarget(0, 70, 0, 0, 1, 0, 0, 64, 0, 64, 100);
+        assertNotNull(upward);
+        assertEquals(64, upward.heightOffset(), 1e-10);
+
+        var downward = SupplyBeamStyle.aimTarget(0, 70, 0, 0, -1, 0, 0, 64, 0, 64, 100);
+        assertNotNull(downward);
+        assertEquals(0, downward.heightOffset(), 1e-10);
+    }
+
+    @Test
+    void formatsHorizontalDistanceWithOneDecimalPlace() {
+        assertEquals("5.0m", SupplyBeamStyle.distanceLabel(0, 0, 3, 4));
+        assertEquals("5.0m", SupplyBeamStyle.distanceLabel(-3, -4, 0, 0));
+        assertEquals("0.0m", SupplyBeamStyle.distanceLabel(12.5, -9.5, 12.5, -9.5));
+    }
 }

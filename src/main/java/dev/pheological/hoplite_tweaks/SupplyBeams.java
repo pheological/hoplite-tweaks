@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.phys.Vec3;
 
 public final class SupplyBeams {
     static final SupplyBeamState STATE = new SupplyBeamState();
@@ -81,5 +82,22 @@ public final class SupplyBeams {
     }
 
     public static void clearTrackedDrops() { STATE.clear(); }
+
+    public static void spawnTestBeam() {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null || client.player == null || !HopliteSession.isActive()) {
+            HopliteChat.send(net.minecraft.network.chat.Component.literal(
+                "Join Hoplite before spawning a test supply beam."));
+            return;
+        }
+        syncWorld(client);
+        Vec3 look = client.player.getLookAngle();
+        SupplyBeamState.Location location = SupplyBeamState.testLocation(
+            client.player.getX(), client.player.getZ(), look.x, look.z, client.player.getYRot()
+        );
+        STATE.spawnTest(location, now());
+        HopliteChat.send(net.minecraft.network.chat.Component.literal(
+            "Test supply beam spawned 100 blocks away for 20 seconds."));
+    }
 
 }

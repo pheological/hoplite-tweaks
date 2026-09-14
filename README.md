@@ -46,12 +46,15 @@ locations outside loaded terrain. Beams use the announced X/Z coordinates and st
 destination chunk first loads. They then remember the actual surface height even when the chunk
 unloads, updating it if the terrain loads again. Beams have a bright core and soft outer glow, with
 a consistent apparent width at any distance. Color, screen width, height, and opacity are adjustable.
+Looking within 10 degrees of a beam shows its horizontal distance near the beam's base; this is enabled by default
+and can be disabled with **Show beam distance** in the Supply Beams settings.
 Each beam expires after five minutes or clears permanently when you come within 25 horizontal
 blocks by default. Set the arrival radius to zero to disable arrival clearing.
 
 Assign **Toggle Supply Crate Beams** under **Controls → Key Binds → Hoplite Tweaks**; it is
 unassigned by default. Hiding beams does not stop tracking or expiration. The Supply Beams tab
-also provides a Controls shortcut and a button to clear tracked drops.
+also provides a Controls shortcut, a button to clear tracked drops, and a test button that spawns
+a beam 100 blocks in the direction you are looking for 20 seconds.
 
 ### Network disclosure
 

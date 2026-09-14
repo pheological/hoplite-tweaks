@@ -2,6 +2,8 @@ package dev.pheological.hoplite_tweaks;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class SupplyBeamStateTest {
@@ -125,6 +127,46 @@ class SupplyBeamStateTest {
         state.announce(location, 0);
         state.clear();
         state.announce(location, 1);
+        assertTrue(state.drops().isEmpty());
+    }
+
+    @Test
+    void testDropSpawnsOneHundredBlocksAlongHorizontalLookDirection() {
+        assertEquals(new SupplyBeamState.Location(110, 20),
+            SupplyBeamState.testLocation(10, 20, 8, 0, 0));
+        assertEquals(new SupplyBeamState.Location(10, 120),
+            SupplyBeamState.testLocation(10, 20, 0, 0, 0));
+        assertEquals(new SupplyBeamState.Location(-90, 20),
+            SupplyBeamState.testLocation(10, 20, 0, 0, 90));
+    }
+
+    @Test
+    void testDropExpiresAfterTwentySecondsWithoutAffectingRealDrops() {
+        var state = state();
+        var real = new SupplyBeamState.Location(200, 200);
+        var test = new SupplyBeamState.Location(100, 0);
+        state.announce(real, 0);
+        state.spawnTest(test, 1_000);
+        assertEquals(2, state.drops().size());
+
+        state.tick(1_000 + SupplyBeamState.TEST_LIFETIME_MS - 1, 0, 0, 25);
+        assertEquals(2, state.drops().size());
+        state.tick(1_000 + SupplyBeamState.TEST_LIFETIME_MS, 0, 0, 25);
+        assertEquals(List.of(real), state.drops().stream().map(SupplyBeamState.Drop::position).toList());
+    }
+
+    @Test
+    void testDropCanBeReplacedClearedAndReceiveLoadedGroundHeight() {
+        var state = state();
+        var first = new SupplyBeamState.Location(100, 0);
+        var second = new SupplyBeamState.Location(0, 100);
+        state.spawnTest(first, 0);
+        state.spawnTest(second, 1);
+        state.groundHeight(second, 87);
+        assertEquals(1, state.drops().size());
+        assertEquals(second, state.drops().getFirst().position());
+        assertEquals(87, state.drops().getFirst().groundY());
+        state.clear();
         assertTrue(state.drops().isEmpty());
     }
 

@@ -90,6 +90,9 @@ public final class HopliteTweaksConfigScreen {
             .tooltip(text("Mark announced supply drops. Beams expire after five minutes."))
             .option(toggle("Supply Crate Beams", "Show beams at tracked drops. Hidden beams still expire and clear on arrival.",
                 defaults.supplyCrateBeams, () -> config.supplyCrateBeams, value -> config.supplyCrateBeams = value))
+            .option(toggle("Show beam distance", "Show the horizontal distance when looking at a supply crate beam.",
+                defaults.showSupplyBeamDistance, () -> config.showSupplyBeamDistance,
+                value -> config.showSupplyBeamDistance = value))
             .option(slider("Arrival radius (blocks)", "Permanently clear a drop when this close horizontally. Zero disables arrival clearing.",
                 defaults.supplyBeamArrivalRadius, () -> config.supplyBeamArrivalRadius,
                 value -> config.supplyBeamArrivalRadius = value, 0, 200, 1))
@@ -126,6 +129,12 @@ public final class HopliteTweaksConfigScreen {
                 .name(text("Clear tracked drops"))
                 .text(text("Clear"))
                 .action(screen -> SupplyBeams.clearTrackedDrops())
+                .build())
+            .option(ButtonOption.createBuilder()
+                .name(text("Test supply beam"))
+                .text(text("Spawn"))
+                .description(description("Spawn a beam 100 blocks in the direction you are looking. It disappears after 20 seconds."))
+                .action(screen -> SupplyBeams.spawnTestBeam())
                 .build())
             .build();
     }

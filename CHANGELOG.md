@@ -4,6 +4,12 @@
 
 # Changelog
 
+## 1.2.1
+
+- Added a default-enabled, high-contrast distance label near the base of a tracked supply crate beam
+  when looking within 10 degrees of it.
+- Added a Supply Beams settings button that spawns a 20-second test beam 100 blocks ahead.
+
 ## 1.0
 
 - Replaced the teammate HUD panel with world-space head markers using the

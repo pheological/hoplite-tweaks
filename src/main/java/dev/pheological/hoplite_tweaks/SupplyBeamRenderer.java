@@ -11,12 +11,18 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 //?}
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 final class SupplyBeamRenderer {
+    private static final int FULL_BRIGHT = 0x00F000F0;
+    private static final double DISTANCE_LABEL_HEIGHT = 1.5D;
+    private static final int DISTANCE_LABEL_BACKGROUND = 0x99000000;
     private static final Identifier WHITE = Identifier.fromNamespaceAndPath(
         HopliteTweaks.MOD_ID, "textures/gui/supply_beam.png");
 
@@ -56,11 +62,12 @@ final class SupplyBeamRenderer {
         Vector3f rightVector = rotation.transform(new Vector3f(1, 0, 0));
         Vector3f forwardVector = rotation.transform(new Vector3f(0, 0, -1));
         Vec3 right = new Vec3(rightVector.x, rightVector.y, rightVector.z);
-        Vec3 forward = new Vec3(forwardVector.x, forwardVector.y, forwardVector.z);
+        Vec3 forward = new Vec3(forwardVector.x, forwardVector.y, forwardVector.z).normalize();
         double height = config.supplyBeamHeight;
         // Keep the entire projected column well inside the far plane and terrain fog.
         double limit = Math.max(16.0D, Math.min(64.0D, client.options.getEffectiveRenderDistance() * 8.0D));
         int color = (config.supplyBeamOpacityPercent * 255 / 100) << 24 | (config.supplyBeamColor & 0xFFFFFF);
+        TargetedDrop targeted = null;
         for (var drop : SupplyBeams.STATE.drops()) {
             Vec3 relative = new Vec3(drop.position().x(), drop.groundY(), drop.position().z()).subtract(camera);
             double bottomDepth = relative.dot(forward);
@@ -83,7 +90,66 @@ final class SupplyBeamRenderer {
                 matrices, RenderTypes.textSeeThrough(WHITE),
                 (pose, vertices) -> geometry(pose, vertices, right, bottomWidth, topWidth, (float) height, color));
             matrices.popPose();
+
+            if (config.showSupplyBeamDistance) {
+                SupplyBeamStyle.AimTarget aim = SupplyBeamStyle.aimTarget(
+                    camera.x, camera.y, camera.z,
+                    forward.x, forward.y, forward.z,
+                    drop.position().x(), drop.groundY(), drop.position().z(),
+                    height, config.supplyBeamThicknessPercent
+                );
+                if (aim != null && (targeted == null || aim.rayDistance() < targeted.aim().rayDistance())) {
+                    targeted = new TargetedDrop(drop, aim, scale);
+                }
+            }
         }
+        if (targeted != null) {
+            renderDistanceLabel(context, matrices, rotation, camera, client, targeted);
+        }
+    }
+
+    //? >=26 {
+    /*private static void renderDistanceLabel(
+        LevelRenderContext context,
+    *///?} else {
+    private static void renderDistanceLabel(
+        WorldRenderContext context,
+    //?}
+        PoseStack matrices,
+        Quaternionf cameraRotation,
+        Vec3 camera,
+        Minecraft client,
+        TargetedDrop target
+    ) {
+        var drop = target.drop();
+        Vec3 point = new Vec3(
+            drop.position().x(),
+            drop.groundY() + DISTANCE_LABEL_HEIGHT,
+            drop.position().z()
+        );
+        Vec3 relative = point.subtract(camera).scale(target.projectionScale());
+        double projectedDistance = target.aim().rayDistance() * target.projectionScale();
+        float textScale = 0.025F * (float) Math.max(1.0D, projectedDistance / 10.0D);
+        Component label = Component.literal("  " + SupplyBeamStyle.distanceLabel(
+            client.player.getX(), client.player.getZ(),
+            drop.position().x(), drop.position().z()
+        ) + "  ");
+
+        matrices.pushPose();
+        matrices.translate(relative.x, relative.y, relative.z);
+        matrices.mulPose(cameraRotation);
+        matrices.scale(textScale, -textScale, textScale);
+        float x = -client.font.width(label) / 2.0F;
+        //? >=26 {
+        /*context.submitNodeCollector().submitText(
+        *///?} else {
+        context.commandQueue().submitText(
+        //?}
+            matrices, x, 0.0F, label.getVisualOrderText(), false,
+            Font.DisplayMode.SEE_THROUGH, FULL_BRIGHT, 0xFFFFFFFF,
+            DISTANCE_LABEL_BACKGROUND, 0
+        );
+        matrices.popPose();
     }
 
     // One ribbon avoids the dark seams and stacked translucent faces of a box beam.
@@ -115,4 +181,10 @@ final class SupplyBeamRenderer {
                 height * ROWS[row] + (float) (right.y * offset), (float) (right.z * offset))
             .setColor(shaded).setUv(0.5F, 0.5F).setLight(0x00F000F0);
     }
+
+    private record TargetedDrop(
+        SupplyBeamState.Drop drop,
+        SupplyBeamStyle.AimTarget aim,
+        double projectionScale
+    ) { }
 }

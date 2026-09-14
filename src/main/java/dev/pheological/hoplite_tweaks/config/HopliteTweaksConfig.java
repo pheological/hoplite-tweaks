@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
-    private static final int CURRENT_CONFIG_VERSION = 5;
+    private static final int CURRENT_CONFIG_VERSION = 6;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("hoplite-tweaks.json");
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
@@ -30,6 +30,7 @@ public final class HopliteTweaksConfig {
     public String pingLeftText = "(";
     public String pingRightText = " ms)";
     public boolean supplyCrateBeams = true;
+    public boolean showSupplyBeamDistance = true;
     public int supplyBeamArrivalRadius = 25;
     public int supplyBeamColor = 0xFFFFD400;
     public int supplyBeamThicknessPercent = 100;
@@ -98,26 +99,7 @@ public final class HopliteTweaksConfig {
             instance.hudXPercent = 100;
             instance.hudYPercent = 100;
         }
-        if (loadedVersion < 1) {
-            instance.autoApplySkins = true;
-            instance.doubleTapSwordDrop = true;
-            instance.doubleTapLegendaryDrop = true;
-        }
-        if (loadedVersion < 2) {
-            instance.hideDistanceWhenTeammateInRenderDistance = true;
-            instance.hideMarkerWhenTeammateInRenderDistance = true;
-        }
-        if (loadedVersion < 3) {
-            instance.markerMinDistance = 0;
-        }
-        if (loadedVersion < 4) {
-            instance.pingHeader = true;
-            instance.pingLeftText = "(";
-            instance.pingRightText = " ms)";
-        }
-        if (loadedVersion < 5) {
-            instance.pingPosition = PingPosition.APPEND_RIGHT;
-        }
+        migrate(instance, loadedVersion);
         boolean migrated = loadedVersion < CURRENT_CONFIG_VERSION;
         instance.configVersion = CURRENT_CONFIG_VERSION;
         instance.clamp();
@@ -141,6 +123,32 @@ public final class HopliteTweaksConfig {
     public static void reset() {
         instance = new HopliteTweaksConfig();
         save();
+    }
+
+    static void migrate(HopliteTweaksConfig config, int loadedVersion) {
+        if (loadedVersion < 1) {
+            config.autoApplySkins = true;
+            config.doubleTapSwordDrop = true;
+            config.doubleTapLegendaryDrop = true;
+        }
+        if (loadedVersion < 2) {
+            config.hideDistanceWhenTeammateInRenderDistance = true;
+            config.hideMarkerWhenTeammateInRenderDistance = true;
+        }
+        if (loadedVersion < 3) {
+            config.markerMinDistance = 0;
+        }
+        if (loadedVersion < 4) {
+            config.pingHeader = true;
+            config.pingLeftText = "(";
+            config.pingRightText = " ms)";
+        }
+        if (loadedVersion < 5) {
+            config.pingPosition = PingPosition.APPEND_RIGHT;
+        }
+        if (loadedVersion < 6) {
+            config.showSupplyBeamDistance = true;
+        }
     }
 
     private void clamp() {
