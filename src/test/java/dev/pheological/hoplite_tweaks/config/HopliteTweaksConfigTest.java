@@ -30,4 +30,24 @@ class HopliteTweaksConfigTest {
 
         assertFalse(config.showSupplyBeamDistance);
     }
+
+    @Test
+    void preVersionSevenConfigEnablesNoLavaFog() {
+        HopliteTweaksConfig config = new HopliteTweaksConfig();
+        config.noLavaFog = false;
+
+        HopliteTweaksConfig.migrate(config, 6);
+
+        assertTrue(config.noLavaFog);
+    }
+
+    @Test
+    void currentConfigPreservesDisabledNoLavaFog() {
+        HopliteTweaksConfig config = new HopliteTweaksConfig();
+        config.noLavaFog = false;
+
+        HopliteTweaksConfig.migrate(config, 7);
+
+        assertFalse(config.noLavaFog);
+    }
 }

@@ -7,7 +7,8 @@ Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hopl
 - Hoplite teammate support
   - Receives Hoplite's authoritative `hoplite-addons:update_teammates` and reset packets.
   - Renders a camera-facing chevron above each teammate in the world.
-  - Displays tab-list health and live distance beneath the teammate name.
+  - Displays live distance beneath the teammate name. Health display is temporarily disabled
+    pending server-admin review, with its implementation retained for easy restoration.
   - Uses live player positions nearby and exact server-provided positions at distance.
   - Can hide nearby marker shapes and distance while retaining health.
   - Uses Hoplite role colors: kings are yellow, party members are blue, and

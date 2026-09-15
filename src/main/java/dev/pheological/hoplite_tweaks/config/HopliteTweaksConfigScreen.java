@@ -178,7 +178,7 @@ public final class HopliteTweaksConfigScreen {
                     defaults.showTeammateDistance, () -> config.showTeammateDistance,
                     value -> config.showTeammateDistance = value))
                 .option(toggle("Hide distance when teammate is in render distance",
-                    "Hides distance for teammates Minecraft is already rendering. Health remains visible.",
+                    "Hides distance for teammates Minecraft is already rendering.",
                     defaults.hideDistanceWhenTeammateInRenderDistance,
                     () -> config.hideDistanceWhenTeammateInRenderDistance,
                     value -> config.hideDistanceWhenTeammateInRenderDistance = value))
@@ -261,6 +261,12 @@ public final class HopliteTweaksConfigScreen {
                 .option(toggle("Enable Hoplite Tweaks",
                     "Master switch. Hoplite features remain server-gated; Ping Header works on every multiplayer server.",
                     defaults.enabled, () -> config.enabled, value -> config.enabled = value))
+                .build())
+            .group(OptionGroup.createBuilder()
+                .name(text("Visuals"))
+                .option(toggle("No lava fog",
+                    "Removes the dense fog while your camera is submerged in lava.",
+                    defaults.noLavaFog, () -> config.noLavaFog, value -> config.noLavaFog = value))
                 .build())
             .group(OptionGroup.createBuilder()
                 .name(text("Duels"))

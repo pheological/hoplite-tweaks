@@ -38,6 +38,9 @@ import java.util.regex.Pattern;
  * public wire data. It does not share implementation code with Teammates.</p>
  */
 public final class TeammateMarkerRenderer {
+    // Temporarily disabled pending admin review. Set to true to restore the existing
+    // tab-list health parsing and marker widget without removing or rewriting it.
+    private static final boolean HEALTH_DISPLAY_APPROVED = false;
     private static final Identifier MARKER_TEXTURE =
         Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "textures/gui/teammate_marker.png");
     private static final Identifier SOLID_TEXTURE =
@@ -120,7 +123,7 @@ public final class TeammateMarkerRenderer {
             worldPosition,
             worldPosition.distanceTo(cameraPosition),
             loaded != null,
-            tabHealth(client, teammate.playerId())
+            HEALTH_DISPLAY_APPROVED ? tabHealth(client, teammate.playerId()) : -1.0F
         );
     }
 

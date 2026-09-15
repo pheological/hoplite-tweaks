@@ -13,13 +13,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
-    private static final int CURRENT_CONFIG_VERSION = 6;
+    private static final int CURRENT_CONFIG_VERSION = 7;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("hoplite-tweaks.json");
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
 
     public int configVersion = CURRENT_CONFIG_VERSION;
     public boolean enabled = true;
+    public boolean noLavaFog = true;
     public boolean killCounter = true;
     public boolean trackKillsAfterMiningPhase = false;
     public KillDisplay killDisplay = KillDisplay.BOTH;
@@ -148,6 +149,9 @@ public final class HopliteTweaksConfig {
         }
         if (loadedVersion < 6) {
             config.showSupplyBeamDistance = true;
+        }
+        if (loadedVersion < 7) {
+            config.noLavaFog = true;
         }
     }
 

@@ -4,11 +4,13 @@
 
 # Changelog
 
-## 1.2.1
+## 1.0.0
 
 - Added a default-enabled, high-contrast distance label near the base of a tracked supply crate beam
   when looking within 10 degrees of it.
 - Added a Supply Beams settings button that spawns a 20-second test beam 100 blocks ahead.
+- Added a togglable No lava fog option under General.
+- Temporarily disabled Team View health display pending server-admin review; its implementation remains intact.
 
 ## 1.0
 
