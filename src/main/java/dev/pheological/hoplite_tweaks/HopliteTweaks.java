@@ -21,6 +21,7 @@ public final class HopliteTweaks {
 
     public static void initializeClient() {
         HopliteTweaksConfig.load();
+        ConfigKeybind.initialize();
 
         //? >=26 {
         /*PayloadTypeRegistry.clientboundPlay().register(ApolloPayload.TYPE, ApolloPayload.CODEC);
