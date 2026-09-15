@@ -12,7 +12,6 @@ import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.Vec3;
@@ -31,7 +30,7 @@ public final class SupplyBeams {
         //?}
             "key.hoplite_tweaks.toggle_supply_beams", InputConstants.Type.KEYSYM,
             InputConstants.UNKNOWN.getValue(),
-            KeyMapping.Category.register(Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "main"))));
+            HopliteKeybindings.CATEGORY));
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> STATE.reset());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> STATE.reset());
         // Server system chat only; player chat must never create a waypoint.

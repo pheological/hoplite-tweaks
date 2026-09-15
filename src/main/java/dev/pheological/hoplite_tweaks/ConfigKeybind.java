@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 //?}
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.Identifier;
 
 final class ConfigKeybind {
     private static KeyMapping openConfigKey;
@@ -26,7 +25,7 @@ final class ConfigKeybind {
         //?}
             "key.hoplite_tweaks.open_config", InputConstants.Type.KEYSYM,
             InputConstants.KEY_P,
-            KeyMapping.Category.register(Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "main"))));
+            HopliteKeybindings.CATEGORY));
         ClientTickEvents.END_CLIENT_TICK.register(ConfigKeybind::tick);
     }
 
