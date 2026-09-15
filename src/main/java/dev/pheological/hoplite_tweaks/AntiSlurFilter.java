@@ -205,7 +205,7 @@ public final class AntiSlurFilter {
             padded = padded.replace(" " + exception + " ", " ");
         }
         for (String blocked : ruleSet.blocked()) {
-            if (padded.contains(" " + blocked + " ")) {
+            if (padded.contains(blocked)) {
                 return true;
             }
         }

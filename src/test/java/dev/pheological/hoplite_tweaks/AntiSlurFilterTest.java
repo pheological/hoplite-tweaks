@@ -11,18 +11,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class AntiSlurFilterTest {
     @Test
-    void parsesCommentsPhrasesAndExceptions() {
+    void matchesBlockedSubstringsAndPreservesExceptions() {
         AntiSlurFilter.RuleSet rules = AntiSlurFilter.parseRules("""
             # maintained remotely
-            blockedword
-            blocked phrase
-            !allowed blockedword
+            retard
+            dox
+            !paradox
             """);
 
-        assertTrue(AntiSlurFilter.matches("That BLOCKEDWORD should stop", rules));
-        assertTrue(AntiSlurFilter.matches("A blocked phrase should stop", rules));
-        assertFalse(AntiSlurFilter.matches("allowed blockedword", rules));
-        assertFalse(AntiSlurFilter.matches("blockedwordish", rules));
+        assertTrue(AntiSlurFilter.matches("That RETARDED message should stop", rules));
+        assertTrue(AntiSlurFilter.matches("They are doxxing someone", rules));
+        assertFalse(AntiSlurFilter.matches("That is a paradox", rules));
+        assertTrue(AntiSlurFilter.matches("A paradox and a separate dox", rules));
+    }
+
+    @Test
+    void matchesBlockedMultiWordPhrasesAsSubstrings() {
+        AntiSlurFilter.RuleSet rules = AntiSlurFilter.parseRules("blocked phrase");
+
+        assertTrue(AntiSlurFilter.matches("A blocked phrases variant should stop", rules));
     }
 
     @Test
