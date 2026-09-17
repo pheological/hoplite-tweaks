@@ -60,6 +60,8 @@ class HopliteTeammatesTest {
         HopliteTeammates.accept(new TeammatesPayload(List.of(second)));
         assertFalse(ApolloState.isTeammate(first.playerId()));
         assertTrue(ApolloState.isTeammate(second.playerId()));
+        assertEquals(first.playerId(), ApolloState.lastKnownTeammates().iterator().next()
+            .teammate().playerId());
     }
 
     @Test void packetCodecRoundTripsTheReferenceWireShape() {

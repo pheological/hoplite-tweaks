@@ -56,6 +56,51 @@ class KillCounterStateTest {
         assertEquals(0, state.count(victim));
     }
 
+    @Test void pointedDripstoneKillCreditsAttackerAndAwardsOneBadge() {
+        var state = state();
+        String message = "§c_Victim1§r was pricked to death by a Pointed Dripstone while fighting §a9Attacker_§r";
+
+        assertTrue(state.accept(message, 0));
+        assertEquals(1, state.count(attacker));
+        assertTrue(state.hasDripstoneBadge(attacker));
+        assertFalse(state.hasDripstoneBadge(victim));
+
+        assertFalse(state.accept("☠ _Victim1 was pricked to death by a Pointed Dripstone while fighting 9Attacker_", 1));
+        assertEquals(1, state.count(attacker));
+        assertTrue(state.hasDripstoneBadge(attacker));
+    }
+
+    @Test void playerChatAndColonFormattedMessagesCannotSpoofKillsOrBadges() {
+        var state = state();
+        String death = "_Victim1 was pricked to death by a Pointed Dripstone while fighting 9Attacker_";
+
+        assertFalse(state.accept(death, 0, true));
+        assertFalse(state.accept("Player: " + death, 1, false));
+        assertEquals(0, state.count(attacker));
+        assertFalse(state.hasDripstoneBadge(attacker));
+    }
+
+    @Test void dripstoneBadgeRequiresExactCauseAndFinalRecognizedAttacker() {
+        for (String message : List.of(
+            "_Victim1 was pricked by a Pointed Dripstone while fighting 9Attacker_",
+            "_Victim1 was pricked to death by Pointed Dripstone while fighting 9Attacker_",
+            "_Victim1 was pricked to death while fighting 9Attacker_ by a Pointed Dripstone",
+            "_Victim1 was pricked to death by a Pointed Dripstone while fighting Missing",
+            "_Victim1 was pricked to death by a Pointed Dripstone while fighting 9Attacker_ nearby"
+        )) {
+            var state = state();
+            state.accept(message, 0);
+            assertFalse(state.hasDripstoneBadge(attacker), message);
+        }
+    }
+
+    @Test void ordinaryServerKillStillCountsWithoutBadge() {
+        var state = state();
+        assertTrue(state.accept("_Victim1 was dazzled by 9Attacker_", 0, false));
+        assertEquals(1, state.count(attacker));
+        assertFalse(state.hasDripstoneBadge(attacker));
+    }
+
     @Test void optionalModeStartsTrackingWhenMiningPhaseLeavesScoreboard() {
         var state = new KillCounterState();
         state.update(world, true, List.of("SOLO ROYALE", "Your Stats:", "Mining Phase in:", "4 minutes"), 0, true);
@@ -104,10 +149,12 @@ class KillCounterStateTest {
 
     @Test void disconnectAndNonHopliteClearAndResetDoesNotStopMatch() {
         var state = state();
-        state.accept("_Victim1 was slain by 9Attacker_", 0);
+        state.accept("_Victim1 was pricked to death by a Pointed Dripstone while fighting 9Attacker_", 0);
+        assertTrue(state.hasDripstoneBadge(attacker));
         state.resetCounts();
         assertTrue(state.inGame());
         assertEquals(0, state.count(attacker));
+        assertFalse(state.hasDripstoneBadge(attacker));
         state.clear();
         assertFalse(state.inGame());
         state = state();

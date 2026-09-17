@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Renders packet-provided teammates as camera-facing markers in the world.
@@ -47,6 +48,7 @@ public final class TeammateMarkerRenderer {
         Identifier.fromNamespaceAndPath("minecraft", "textures/block/white_concrete.png");
     private static final int FULL_BRIGHT = 0x00F000F0;
     private static final int HEALTH_COLOR = 0xFFFF6B7A;
+    private static final int DEATH_COLOR = 0xFFFF3333;
     private static final float MARKER_HALF_SIZE = 0.18F;
     private static final float MARKER_HALF_HEIGHT = 0.22F;
     private static final float DIAMOND_HALF_HEIGHT = 0.30F;
@@ -95,14 +97,32 @@ public final class TeammateMarkerRenderer {
         float tickDelta = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         String dimension = client.level.dimension().identifier().getPath();
-        ApolloState.teammates().stream()
+        Stream<Marker> liveMarkers = ApolloState.teammates().stream()
             .filter(teammate -> !teammate.playerId().equals(client.player.getUUID()))
-            .filter(teammate -> teammate.world().isBlank()
-                || teammate.world().toLowerCase(Locale.ROOT).endsWith(dimension.toLowerCase(Locale.ROOT)))
-            .map(teammate -> marker(client, teammate, tickDelta, cameraPosition))
+            .filter(teammate -> ApolloState.deathLocations().stream()
+                .noneMatch(death -> death.teammate().playerId().equals(teammate.playerId())))
+            .filter(teammate -> sameDimension(teammate.world(), dimension))
+            .map(teammate -> marker(client, teammate, tickDelta, cameraPosition));
+        Stream<Marker> lastKnownMarkers = config.showLastKnownLocations
+            ? ApolloState.lastKnownTeammates().stream()
+                .filter(entry -> !entry.teammate().playerId().equals(client.player.getUUID()))
+                .filter(entry -> sameDimension(entry.teammate().world(), dimension))
+                .map(entry -> lastKnownMarker(entry, cameraPosition))
+            : Stream.empty();
+        long now = System.currentTimeMillis();
+        long deathDurationMillis = config.deathMarkerDurationSeconds * 1_000L;
+        Stream<Marker> deathMarkers = config.showDeathLocations
+            ? ApolloState.deathLocations().stream()
+                .filter(entry -> now - entry.diedAt() < deathDurationMillis)
+                .filter(entry -> !entry.teammate().playerId().equals(client.player.getUUID()))
+                .filter(entry -> sameDimension(entry.teammate().world(), dimension))
+                .map(entry -> deathMarker(entry, cameraPosition))
+            : Stream.empty();
+        Stream.of(liveMarkers, lastKnownMarkers, deathMarkers).flatMap(stream -> stream)
             .filter(marker -> outsideMinimumDistance(marker.distance, config.markerMinDistance))
             .sorted(Comparator.comparingDouble((Marker marker) -> marker.distance).reversed())
-            .forEach(marker -> drawMarker(context, matrices, cameraRotation, marker, config));
+            .forEach(marker -> drawMarker(context, matrices, cameraRotation, marker, config,
+                client.player.getViewVector(tickDelta)));
     }
 
     private static Marker marker(
@@ -123,7 +143,45 @@ public final class TeammateMarkerRenderer {
             worldPosition,
             worldPosition.distanceTo(cameraPosition),
             loaded != null,
-            HEALTH_DISPLAY_APPROVED ? tabHealth(client, teammate.playerId()) : -1.0F
+            HEALTH_DISPLAY_APPROVED ? tabHealth(client, teammate.playerId()) : -1.0F,
+            false,
+            false,
+            0L,
+            teammate.displayName()
+        );
+    }
+
+    private static Marker lastKnownMarker(
+        ApolloModels.LastKnownTeammate entry,
+        Vec3 cameraPosition
+    ) {
+        ApolloModels.Teammate teammate = entry.teammate();
+        Vec3 position = new Vec3(teammate.x(), teammate.y(), teammate.z());
+        String profileName = entry.profileName() == null || entry.profileName().isBlank()
+            ? teammate.displayName()
+            : entry.profileName();
+        return new Marker(
+            teammate,
+            position,
+            position.distanceTo(cameraPosition),
+            false,
+            -1.0F,
+            true,
+            false,
+            0L,
+            profileName
+        );
+    }
+
+    private static Marker deathMarker(ApolloModels.DeathLocation entry, Vec3 cameraPosition) {
+        ApolloModels.Teammate teammate = entry.teammate();
+        Vec3 position = new Vec3(teammate.x(), teammate.y(), teammate.z());
+        String profileName = entry.profileName() == null || entry.profileName().isBlank()
+            ? teammate.displayName()
+            : entry.profileName();
+        return new Marker(
+            teammate, position, position.distanceTo(cameraPosition), false, -1.0F,
+            false, true, entry.diedAt(), profileName
         );
     }
 
@@ -137,7 +195,8 @@ public final class TeammateMarkerRenderer {
         PoseStack matrices,
         Quaternionf cameraRotation,
         Marker marker,
-        HopliteTweaksConfig config
+        HopliteTweaksConfig config,
+        Vec3 viewDirection
     ) {
         double scale = config.markerScalePercent / 100.0D;
         if (marker.distance > 10.0D) {
@@ -151,12 +210,15 @@ public final class TeammateMarkerRenderer {
         //?}
         Vec3 relative = marker.position.subtract(cameraPosition);
         double height = 2.15D + config.markerHeightPercent / 100.0D;
-        int color = TeammateRole.colorFor(
-            marker.teammate,
-            config.kingMarkerColor,
-            config.partyMarkerColor,
-            config.teammateMarkerColor
-        );
+        int color = marker.death
+            ? fadedDeathColor(System.currentTimeMillis() - marker.diedAt,
+                config.deathMarkerDurationSeconds * 1_000L)
+            : marker.lastKnown ? config.lastKnownMarkerColor : TeammateRole.colorFor(
+                marker.teammate,
+                config.kingMarkerColor,
+                config.partyMarkerColor,
+                config.teammateMarkerColor
+            );
 
         matrices.pushPose();
         matrices.translate(relative.x, relative.y + height, relative.z);
@@ -166,7 +228,11 @@ public final class TeammateMarkerRenderer {
         if (!hideShape) {
             matrices.pushPose();
             matrices.translate(0.0D, MARKER_VERTICAL_OFFSET * scale, 0.0D);
+            //? >=26.3 {
+            /*matrices.rotate(cameraRotation);
+            *///?} else {
             matrices.mulPose(cameraRotation);
+            //?}
             matrices.scale((float) scale, (float) scale, (float) scale);
             //? >=26 {
             /*context.submitNodeCollector().submitCustomGeometry(
@@ -181,8 +247,10 @@ public final class TeammateMarkerRenderer {
             matrices.popPose();
         }
 
-        Component nameLabel = markerNameLabel(marker, config);
-        Component distanceLabel = markerDistanceLabel(marker, config);
+        boolean revealText = !config.revealMarkerTextOnLook
+            || withinViewAngle(viewDirection, relative.add(0.0D, height, 0.0D), config.markerTextViewAngle);
+        Component nameLabel = revealText ? markerNameLabel(marker, config) : null;
+        Component distanceLabel = revealText ? markerDistanceLabel(marker, config) : null;
         Component healthLabel = markerHealthLabel(marker);
         if (nameLabel != null || distanceLabel != null || healthLabel != null) {
             Minecraft client = Minecraft.getInstance();
@@ -193,7 +261,11 @@ public final class TeammateMarkerRenderer {
 
             matrices.pushPose();
             matrices.translate(0.0D, 0.42D * scale, 0.0D);
+            //? >=26.3 {
+            /*matrices.rotate(cameraRotation);
+            *///?} else {
             matrices.mulPose(cameraRotation);
+            //?}
             matrices.scale(textScale, -textScale, textScale);
             if (nameLabel != null) {
                 submitCenteredText(context, matrices, nameLabel, 0.0F, background);
@@ -369,9 +441,14 @@ public final class TeammateMarkerRenderer {
         if (!config.showTeammateName) {
             return null;
         }
-        String name = abbreviate(marker.teammate.displayName(), 22);
-        return Component.literal(name)
-            .withStyle(style -> style.withColor(0xFFFFFF));
+        String name = abbreviate(marker.displayName, 22);
+        var label = Component.literal(name)
+            .withStyle(style -> style.withColor(config.markerNameColor & 0xFFFFFF));
+        if (marker.death) {
+            label.append(Component.literal(" · died")
+                .withStyle(style -> style.withColor(DEATH_COLOR & 0xFFFFFF)));
+        }
+        return label;
     }
 
     private static Component markerDistanceLabel(Marker marker, HopliteTweaksConfig config) {
@@ -445,6 +522,31 @@ public final class TeammateMarkerRenderer {
         return minimumDistance == 0 || distance > minimumDistance;
     }
 
+    static String formatLastSeen(long elapsedMillis) {
+        long seconds = Math.max(0L, elapsedMillis) / 1_000L;
+        return seconds < 60L
+            ? "last seen " + seconds + "s ago"
+            : "last seen " + seconds / 60L + "m ago";
+    }
+
+    static int fadedDeathColor(long elapsedMillis, long durationMillis) {
+        if (durationMillis <= 0L) {
+            return DEATH_COLOR & 0x00FFFFFF;
+        }
+        double remaining = 1.0D - Math.clamp((double) elapsedMillis / durationMillis, 0.0D, 1.0D);
+        int alpha = (int) Math.round(255.0D * remaining);
+        return alpha << 24 | DEATH_COLOR & 0x00FFFFFF;
+    }
+
+    static boolean withinViewAngle(Vec3 viewDirection, Vec3 targetDirection, int angleDegrees) {
+        if (viewDirection == null || targetDirection == null
+            || viewDirection.lengthSqr() == 0.0D || targetDirection.lengthSqr() == 0.0D) {
+            return false;
+        }
+        double cosine = viewDirection.normalize().dot(targetDirection.normalize());
+        return cosine >= Math.cos(Math.toRadians(Math.clamp(angleDegrees, 0, 90)));
+    }
+
     private static float parseHealth(String value) {
         try {
             return Float.parseFloat(value);
@@ -467,12 +569,21 @@ public final class TeammateMarkerRenderer {
         return value.length() <= max ? value : value.substring(0, max - 1) + "…";
     }
 
+    private static boolean sameDimension(String world, String dimension) {
+        return world.isBlank()
+            || world.toLowerCase(Locale.ROOT).endsWith(dimension.toLowerCase(Locale.ROOT));
+    }
+
     private record Marker(
         ApolloModels.Teammate teammate,
         Vec3 position,
         double distance,
         boolean inRenderDistance,
-        float health
+        float health,
+        boolean lastKnown,
+        boolean death,
+        long diedAt,
+        String displayName
     ) {
     }
 }

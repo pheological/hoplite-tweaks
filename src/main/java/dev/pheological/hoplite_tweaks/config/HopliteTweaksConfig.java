@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
-    private static final int CURRENT_CONFIG_VERSION = 7;
+    private static final int CURRENT_CONFIG_VERSION = 12;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("hoplite-tweaks.json");
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
@@ -26,6 +26,9 @@ public final class HopliteTweaksConfig {
     public KillDisplay killDisplay = KillDisplay.BOTH;
     public KillPlacement killPlacement = KillPlacement.NEXT_TO_NAME;
     public boolean killScoreboard = true;
+    public boolean dripstoneBadge = true;
+    public KillDisplay dripstoneDisplay = KillDisplay.BOTH;
+    public KillPlacement dripstonePlacement = KillPlacement.NEXT_TO_NAME;
     public boolean pingHeader = true;
     public PingPosition pingPosition = PingPosition.APPEND_RIGHT;
     public String pingLeftText = "(";
@@ -38,17 +41,23 @@ public final class HopliteTweaksConfig {
     public int supplyBeamHeight = 256;
     public int supplyBeamOpacityPercent = 65;
     public boolean teammateMarkers = true;
+    public boolean showLastKnownLocations = true;
+    public boolean showDeathLocations = true;
+    public int deathMarkerDurationSeconds = 60;
     public boolean showTeammateName = true;
     public boolean duelTeamGlow = true;
     public boolean cooldownHud = true;
     public boolean showCooldownsInHotbar = true;
     public boolean showCooldownsAtTop = false;
     public boolean showTeammateDistance = true;
+    public boolean revealMarkerTextOnLook = false;
+    public int markerTextViewAngle = 15;
     public boolean hideDistanceWhenTeammateInRenderDistance = true;
     public boolean hideMarkerWhenTeammateInRenderDistance = true;
     public boolean compactCooldowns = false;
     public boolean partyMessagePing = true;
     public boolean autoPartyChat = false;
+    public boolean autoDamageSummary = true;
     public boolean weeklyCrateReminder = true;
     public boolean autoPet = true;
     public boolean autoApplySkins = true;
@@ -63,6 +72,7 @@ public final class HopliteTweaksConfig {
     public int kingMarkerColor = 0xFFFFD400;
     public int partyMarkerColor = 0xFF168CFF;
     public int teammateMarkerColor = 0xFF00FF55;
+    public int lastKnownMarkerColor = 0xFF808080;
     public int markerNameColor = 0xFFFFFFFF;
     public int markerDistanceColor = 0xFFFFFFFF;
     public MarkerShape markerShape = MarkerShape.INVERTED_TRIANGLE;
@@ -153,11 +163,33 @@ public final class HopliteTweaksConfig {
         if (loadedVersion < 7) {
             config.noLavaFog = true;
         }
+        if (loadedVersion < 8) {
+            config.revealMarkerTextOnLook = false;
+            config.markerTextViewAngle = 15;
+        }
+        if (loadedVersion < 9) {
+            config.showLastKnownLocations = true;
+            config.lastKnownMarkerColor = 0xFF808080;
+        }
+        if (loadedVersion < 10) {
+            config.dripstoneBadge = true;
+            config.dripstoneDisplay = KillDisplay.BOTH;
+            config.dripstonePlacement = KillPlacement.NEXT_TO_NAME;
+        }
+        if (loadedVersion < 11) {
+            config.autoDamageSummary = true;
+        }
+        if (loadedVersion < 12) {
+            config.showDeathLocations = true;
+            config.deathMarkerDurationSeconds = 60;
+        }
     }
 
     private void clamp() {
         if (killDisplay == null) killDisplay = KillDisplay.BOTH;
         if (killPlacement == null) killPlacement = KillPlacement.NEXT_TO_NAME;
+        if (dripstoneDisplay == null) dripstoneDisplay = KillDisplay.BOTH;
+        if (dripstonePlacement == null) dripstonePlacement = KillPlacement.NEXT_TO_NAME;
         if (pingPosition == null) pingPosition = PingPosition.APPEND_RIGHT;
         if (pingLeftText == null) pingLeftText = "(";
         if (pingRightText == null) pingRightText = " ms)";
@@ -172,6 +204,8 @@ public final class HopliteTweaksConfig {
         markerHeightPercent = Math.clamp(markerHeightPercent, 0, 200);
         markerMinDistance = Math.clamp(markerMinDistance, 0, 2_000);
         markerTextScalePercent = Math.clamp(markerTextScalePercent, 50, 200);
+        markerTextViewAngle = Math.clamp(markerTextViewAngle, 0, 90);
+        deathMarkerDurationSeconds = Math.clamp(deathMarkerDurationSeconds, 5, 300);
         if (markerShape == null) {
             markerShape = MarkerShape.INVERTED_TRIANGLE;
         }

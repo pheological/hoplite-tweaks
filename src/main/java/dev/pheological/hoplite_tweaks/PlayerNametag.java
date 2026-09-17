@@ -15,13 +15,20 @@ public final class PlayerNametag {
     public static Decoration decorate(Component name, UUID playerId) {
         HopliteTweaksConfig config = HopliteTweaksConfig.get();
         Component kills = config.killDisplay.nametag() ? KillCounter.counter(playerId) : null;
+        Component dripstone = config.dripstoneDisplay.nametag() ? KillCounter.dripstoneBadge(playerId) : null;
         Component ping = PingHeader.counter(playerId);
         boolean killsAbove = config.killPlacement == HopliteTweaksConfig.KillPlacement.ABOVE_NAME;
-        return decorate(name, kills, ping, killsAbove, config.pingPosition);
+        boolean dripstoneAbove = config.dripstonePlacement == HopliteTweaksConfig.KillPlacement.ABOVE_NAME;
+        return decorate(name, kills, ping, dripstone, killsAbove, dripstoneAbove, config.pingPosition);
     }
 
     static Decoration decorate(Component name, Component kills, Component ping,
         boolean killsAbove, HopliteTweaksConfig.PingPosition pingPosition) {
+        return decorate(name, kills, ping, null, killsAbove, false, pingPosition);
+    }
+
+    static Decoration decorate(Component name, Component kills, Component ping, Component dripstone,
+        boolean killsAbove, boolean dripstoneAbove, HopliteTweaksConfig.PingPosition pingPosition) {
         boolean pingAbove = pingPosition == HopliteTweaksConfig.PingPosition.ABOVE_NAME;
         Component decorated = name;
         if (ping != null && pingPosition == HopliteTweaksConfig.PingPosition.APPEND_LEFT) {
@@ -31,10 +38,14 @@ public final class PlayerNametag {
             decorated = append(decorated, ping);
         }
         if (kills != null && !killsAbove) decorated = KillCounter.append(decorated, kills);
+        if (dripstone != null && !dripstoneAbove) {
+            decorated = KillCounter.appendDripstone(decorated, dripstone);
+        }
 
         Component header = null;
         if (ping != null && pingAbove) header = ping;
         if (kills != null && killsAbove) header = join(header, kills);
+        if (dripstone != null && dripstoneAbove) header = join(header, dripstone);
         return new Decoration(decorated, header);
     }
 

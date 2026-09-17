@@ -28,7 +28,11 @@ public final class SupplyBeams {
         *///?} else {
         toggleKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
         //?}
+            //? >=26.3 {
+            /*"key.hoplite_tweaks.toggle_supply_beams", InputConstants.Type.KEYBOARD,
+            *///?} else {
             "key.hoplite_tweaks.toggle_supply_beams", InputConstants.Type.KEYSYM,
+            //?}
             InputConstants.UNKNOWN.getValue(),
             HopliteKeybindings.CATEGORY));
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> STATE.reset());

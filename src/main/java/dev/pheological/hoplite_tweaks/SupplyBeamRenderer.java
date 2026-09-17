@@ -137,7 +137,11 @@ final class SupplyBeamRenderer {
 
         matrices.pushPose();
         matrices.translate(relative.x, relative.y, relative.z);
+        //? >=26.3 {
+        /*matrices.rotate(cameraRotation);
+        *///?} else {
         matrices.mulPose(cameraRotation);
+        //?}
         matrices.scale(textScale, -textScale, textScale);
         float x = -client.font.width(label) / 2.0F;
         //? >=26 {

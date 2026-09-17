@@ -1,5 +1,6 @@
 package dev.pheological.hoplite_tweaks;
 
+import dev.pheological.hoplite_tweaks.apollo.ApolloState;
 import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
@@ -15,9 +16,15 @@ import java.util.*;
 
 public final class KillCounter {
     private static final KillCounterState STATE = new KillCounterState();
-    private static final String SWORD = "\uE000";
+    // Keep this outside LegendWatch's U+E000-U+E034 icon range. Components normally
+    // retain their font style, but tab-list decorators and text-flattening mods can
+    // otherwise mistake both mods' first glyph for the same icon.
+    private static final String SWORD = "\uE100";
+    private static final String DRIPSTONE = "\uE101";
     private static final FontDescription FONT = new FontDescription.Resource(
         Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "kills"));
+    private static final FontDescription DRIPSTONE_FONT = new FontDescription.Resource(
+        Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "dripstone"));
 
     private KillCounter() {}
 
@@ -25,16 +32,20 @@ public final class KillCounter {
         ClientTickEvents.END_CLIENT_TICK.register(client -> refresh());
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> STATE.clear());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> STATE.clear());
-        // Hoplite has delivered server-authored notices through both channels across
-        // protocol/client versions. accept() de-duplicates mirrored messages.
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> accept(message));
+        // GAME is server-authored. CHAT is intentionally ignored so players cannot
+        // spoof death notices; accept() also rejects proxy-formatted colon messages.
+        ClientReceiveMessageEvents.GAME.register((message, overlay) -> accept(message, false));
         ClientReceiveMessageEvents.CHAT.register((message, signed, sender, params, receivedAt) ->
-            accept(message));
+            accept(message, true));
     }
 
-    private static void accept(Component message) {
+    private static void accept(Component message, boolean playerAuthored) {
+        if (playerAuthored) return;
         refresh();
-        STATE.accept(message.getString(), now());
+        KillCounterState.Kill kill = STATE.acceptKill(message.getString(), now(), false);
+        if (kill != null) {
+            ApolloState.markDeath(kill.victim(), System.currentTimeMillis());
+        }
     }
 
     private static long now() { return System.nanoTime() / 1_000_000; }
@@ -94,9 +105,20 @@ public final class KillCounter {
             .append(Component.literal(" " + kills).withStyle(style -> style.withFont(FontDescription.DEFAULT)));
     }
 
+    static MutableComponent dripstoneLabel() {
+        return Component.literal(DRIPSTONE).setStyle(Style.EMPTY.withColor(0xFFFFFF)
+            .withBold(false).withItalic(false).withUnderlined(false)
+            .withStrikethrough(false).withObfuscated(false).withFont(DRIPSTONE_FONT));
+    }
+
     static boolean decorated(Component text) {
         return text != null && text.toFlatList().stream().anyMatch(part ->
             part.getString().contains(SWORD) && FONT.equals(part.getStyle().getFont()));
+    }
+
+    static boolean dripstoneDecorated(Component text) {
+        return text != null && text.toFlatList().stream().anyMatch(part ->
+            part.getString().contains(DRIPSTONE) && DRIPSTONE_FONT.equals(part.getStyle().getFont()));
     }
 
     public static Component append(Component name, Component count) {
@@ -107,7 +129,21 @@ public final class KillCounter {
     }
 
     public static Component tab(Component name, UUID player) {
-        return HopliteTweaksConfig.get().killDisplay.tab() ? append(name, counter(player)) : name;
+        var config = HopliteTweaksConfig.get();
+        Component decorated = config.killDisplay.tab() ? append(name, counter(player)) : name;
+        return config.dripstoneDisplay.tab() ? appendDripstone(decorated, dripstoneBadge(player)) : decorated;
+    }
+
+    public static Component dripstoneBadge(UUID player) {
+        var config = HopliteTweaksConfig.get();
+        return config.enabled && config.dripstoneBadge && STATE.inGame()
+            && STATE.hasDripstoneBadge(player) ? dripstoneLabel() : null;
+    }
+
+    static Component appendDripstone(Component name, Component badge) {
+        if (name == null || badge == null || dripstoneDecorated(name)) return name;
+        return Component.empty().append(name.copy()).append(Component.literal(" ").setStyle(Style.EMPTY))
+            .append(badge.copy());
     }
 
     public static MutableComponent sidebarRow(MutableComponent row) {

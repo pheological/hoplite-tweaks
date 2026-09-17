@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
 import java.util.List;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.*;
 
 class KillCounterDisplayTest {
@@ -24,7 +25,7 @@ class KillCounterDisplayTest {
             .withStyle(style -> style.withBold(true));
         Component output = KillCounter.append(name, KillCounter.label(3));
         assertEquals("[VIP] Player [Ping: 42]", name.getString());
-        assertEquals("[VIP] Player [Ping: 42] \uE000 3", output.getString());
+        assertEquals("[VIP] Player [Ping: 42] \uE100 3", output.getString());
         var segments = output.toFlatList();
         assertEquals(0xFF55FF, segments.getFirst().getStyle().getColor().getValue());
         assertTrue(segments.getFirst().getStyle().isBold());
@@ -48,7 +49,26 @@ class KillCounterDisplayTest {
 
     @Test void unrelatedPrivateUseIconsDoNotSuppressOurCounter() {
         Component name = Component.literal("\uE000 Player");
-        assertEquals("\uE000 Player \uE000 2", KillCounter.append(name, KillCounter.label(2)).getString());
+        assertEquals("\uE000 Player \uE100 2", KillCounter.append(name, KillCounter.label(2)).getString());
+    }
+
+    @Test void dripstoneBadgeUsesAnIndependentFontAndCannotDuplicate() {
+        Component badge = KillCounter.dripstoneLabel();
+        assertEquals("\uE101", badge.getString());
+        assertNotEquals(FontDescription.DEFAULT, badge.getStyle().getFont());
+        Component once = KillCounter.appendDripstone(Component.literal("Player"), badge);
+        assertEquals("Player \uE101", once.getString());
+        assertSame(once, KillCounter.appendDripstone(once, badge));
+    }
+
+    @Test void dripstoneFontUsesVanillaFlatItemTexture() throws Exception {
+        try (var stream = getClass().getResourceAsStream(
+            "/assets/hoplite_tweaks/font/dripstone.json")) {
+            assertNotNull(stream);
+            String json = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+            assertTrue(json.contains("minecraft:item/pointed_dripstone.png"));
+            assertTrue(json.contains("\\uE101"));
+        }
     }
 
     @Test void trackingSurvivesHiddenModesAndSidebarDoesNotMutateRows() throws Exception {
@@ -76,7 +96,7 @@ class KillCounterDisplayTest {
             config.killDisplay = KillDisplay.NAMETAG;
             assertSame(row, KillCounter.tab(row, attacker));
             var decorated = KillCounter.sidebarRow(row);
-            assertEquals("\uE000 1 [VIP] Attacker", decorated.getString());
+            assertEquals("\uE100 1 [VIP] Attacker", decorated.getString());
             assertEquals("[VIP] Attacker", row.getString());
             assertEquals(0x55FFFF, decorated.toFlatList().getLast().getStyle().getColor().getValue());
             assertSame(decorated, KillCounter.sidebarRow(decorated));
@@ -88,7 +108,7 @@ class KillCounterDisplayTest {
             config.killScoreboard = false;
             config.killDisplay = KillDisplay.TAB_LIST;
             assertSame(row, KillCounter.sidebarRow(row));
-            assertEquals("[VIP] Attacker \uE000 1", KillCounter.tab(row, attacker).getString());
+            assertEquals("[VIP] Attacker \uE100 1", KillCounter.tab(row, attacker).getString());
             config.enabled = false;
             assertSame(row, KillCounter.tab(row, attacker));
             config.enabled = true;

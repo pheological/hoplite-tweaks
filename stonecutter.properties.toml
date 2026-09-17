@@ -42,3 +42,10 @@ deps.minecraft = "26.2"
 deps.fabric-api = "0.154.2+26.2"
 deps.modmenu = "20.0.0-beta.1"
 deps.yacl = "LlSShNCR"
+
+[fabric."26.3"]
+deps.minecraft = "26.3"
+deps.fabric-loader = "0.19.5"
+deps.fabric-api = "0.160.5+26.3"
+deps.modmenu = "21.0.0-beta.1"
+deps.yacl = "rSnhz5tr"

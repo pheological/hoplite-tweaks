@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.pheological.hoplite_tweaks.KillCounterRenderState;
-import dev.pheological.hoplite_tweaks.PlayerNametag;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.network.chat.Component;
@@ -50,17 +49,16 @@ public abstract class KillCounterNametagMixin {
         AvatarRenderState state,
         //?}
         PoseStack enclosingPose, SubmitNodeCollector enclosingCollector, CameraRenderState enclosingCamera) {
-        PlayerNametag.Decoration decoration = PlayerNametag.decorate(
-            name, ((KillCounterRenderState) state).hopliteTweaks$playerId());
-        original.call(collector, pose, attachment, offset, decoration.name(), seeThrough, light,
+        Component header = ((KillCounterRenderState) state).hopliteTweaks$nametagHeader();
+        original.call(collector, pose, attachment, offset, name, seeThrough, light,
             //? <26.2 {
             distance,
             //?}
             camera);
-        if (decoration.header() != null) {
+        if (header != null) {
             pose.pushPose();
             pose.translate(0, 9 * 1.15f * 0.025f, 0);
-            collector.submitNameTag(pose, attachment, offset, decoration.header(), seeThrough, light,
+            collector.submitNameTag(pose, attachment, offset, header, seeThrough, light,
                 //? <26.2 {
                 distance,
                 //?}

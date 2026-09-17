@@ -50,9 +50,11 @@ public final class HopliteTweaks {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ApolloState.clear());
 
         HopliteHud.initialize();
+        HopliteTeammates.initialize();
         TeammateMarkerRenderer.initialize();
         SupplyBeams.initialize();
         KillCounter.initialize();
+        AutoDamageSummary.initialize();
         HopliteAutomation.initialize();
         AutoApplySkins.initialize();
         AntiSlurFilter.initialize();

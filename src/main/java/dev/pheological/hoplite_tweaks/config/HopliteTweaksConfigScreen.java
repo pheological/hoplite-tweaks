@@ -30,6 +30,7 @@ public final class HopliteTweaksConfigScreen {
             .title(text("Hoplite Tweaks"))
             .save(HopliteTweaksConfig::save)
             .category(generalCategory(config, defaults))
+            .category(trackerCategory(config, defaults))
             .category(teamCategory(config, defaults))
             .category(cooldownCategory(config, defaults))
             .category(supplyCategory(config, defaults))
@@ -82,6 +83,41 @@ public final class HopliteTweaksConfigScreen {
                 .option(string("Text after ping", "Literal text placed after the number.",
                     defaults.pingRightText, () -> config.pingRightText, value -> config.pingRightText = value))
                 .build();
+    }
+
+    private static OptionGroup dripstoneKillGroup(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
+        var placement = Option.<HopliteTweaksConfig.KillPlacement>createBuilder()
+            .name(text("Nametag position"))
+            .description(description("Place the dripstone badge beside the name or on the header line above."))
+            .binding(defaults.dripstonePlacement, () -> config.dripstonePlacement,
+                value -> config.dripstonePlacement = value)
+            .controller(option -> EnumControllerBuilder.create(option)
+                .enumClass(HopliteTweaksConfig.KillPlacement.class))
+            .available(config.dripstoneDisplay.nametag()).build();
+        return OptionGroup.createBuilder()
+            .name(text("Trap Tracker"))
+            .description(description("Marks players who earned a kill with pointed dripstone this match."))
+            .option(toggle("Show dripstone badge", "Display one vanilla pointed-dripstone icon for qualifying attackers.",
+                defaults.dripstoneBadge, () -> config.dripstoneBadge, value -> config.dripstoneBadge = value))
+            .option(Option.<HopliteTweaksConfig.KillDisplay>createBuilder()
+                .name(text("Show badge in"))
+                .binding(defaults.dripstoneDisplay, () -> config.dripstoneDisplay,
+                    value -> config.dripstoneDisplay = value)
+                .controller(option -> EnumControllerBuilder.create(option)
+                    .enumClass(HopliteTweaksConfig.KillDisplay.class))
+                .listener((option, value) -> placement.setAvailable(value.nametag())).build())
+            .option(placement)
+            .build();
+    }
+
+    private static ConfigCategory trackerCategory(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
+        return ConfigCategory.createBuilder()
+            .name(text("Tracker"))
+            .tooltip(text("Kill counts, trap badges, and player ping labels."))
+            .group(killTrackerGroup(config, defaults))
+            .group(dripstoneKillGroup(config, defaults))
+            .group(pingHeaderGroup(config, defaults))
+            .build();
     }
 
     private static ConfigCategory supplyCategory(HopliteTweaksConfig config, HopliteTweaksConfig defaults) {
@@ -170,6 +206,27 @@ public final class HopliteTweaksConfigScreen {
                     value -> config.markerMinDistance = value, 0, 1000, 25))
                 .build())
             .group(OptionGroup.createBuilder()
+                .name(text("Disconnected teammates"))
+                .description(description("Retains a teammate's last reported position after they disconnect, until their corpse expires."))
+                .option(toggle("Show disconnected locations",
+                    "Draws a gray marker when a teammate disappears from both Apollo and the tab list.",
+                    defaults.showLastKnownLocations, () -> config.showLastKnownLocations,
+                    value -> config.showLastKnownLocations = value))
+                .option(color("Disconnected marker color", "Color used for disconnected teammate markers.",
+                    defaults.lastKnownMarkerColor, () -> config.lastKnownMarkerColor,
+                    value -> config.lastKnownMarkerColor = value))
+                .build())
+            .group(OptionGroup.createBuilder()
+                .name(text("Death locations"))
+                .description(description("Marks a teammate's last reported position when a trusted server death message is detected."))
+                .option(toggle("Show death locations", "Draws a fading red marker where a teammate died.",
+                    defaults.showDeathLocations, () -> config.showDeathLocations,
+                    value -> config.showDeathLocations = value))
+                .option(slider("Fade duration", "Seconds before a death marker fully fades away.",
+                    defaults.deathMarkerDurationSeconds, () -> config.deathMarkerDurationSeconds,
+                    value -> config.deathMarkerDurationSeconds = value, 5, 300, 5))
+                .build())
+            .group(OptionGroup.createBuilder()
                 .name(text("Name and distance"))
                 .option(toggle("Show teammate name", "Displays the teammate's name above the marker.",
                     defaults.showTeammateName, () -> config.showTeammateName,
@@ -182,6 +239,13 @@ public final class HopliteTweaksConfigScreen {
                     defaults.hideDistanceWhenTeammateInRenderDistance,
                     () -> config.hideDistanceWhenTeammateInRenderDistance,
                     value -> config.hideDistanceWhenTeammateInRenderDistance = value))
+                .option(toggle("Reveal text only when looking",
+                    "Hides teammate names and distances until you look close enough toward that teammate.",
+                    defaults.revealMarkerTextOnLook, () -> config.revealMarkerTextOnLook,
+                    value -> config.revealMarkerTextOnLook = value))
+                .option(slider("Look angle", "Shows marker text when the teammate is within this angle of your crosshair.",
+                    defaults.markerTextViewAngle, () -> config.markerTextViewAngle,
+                    value -> config.markerTextViewAngle = value, 0, 90, 1))
                 .option(toggle("Text background", "Adds a translucent background behind marker text.",
                     defaults.markerTextBackground, () -> config.markerTextBackground,
                     value -> config.markerTextBackground = value))
@@ -282,6 +346,10 @@ public final class HopliteTweaksConfigScreen {
                 .option(toggle("Auto Party Chat",
                     "Runs /party chat after a light-green joined message.",
                     defaults.autoPartyChat, () -> config.autoPartyChat, value -> config.autoPartyChat = value))
+                .option(toggle("Auto damage summary",
+                    "Runs /damagesummary once when a Round 2 title appears.",
+                    defaults.autoDamageSummary, () -> config.autoDamageSummary,
+                    value -> config.autoDamageSummary = value))
                 .option(toggle("Anti-slur",
                     "Stops blocked words and phrases from being sent. The moderation list updates automatically.",
                     defaults.antiSlur, () -> config.antiSlur, value -> config.antiSlur = value))
@@ -311,8 +379,6 @@ public final class HopliteTweaksConfigScreen {
                     defaults.doubleTapLegendaryDrop, () -> config.doubleTapLegendaryDrop,
                     value -> config.doubleTapLegendaryDrop = value))
                 .build())
-            .group(killTrackerGroup(config, defaults))
-            .group(pingHeaderGroup(config, defaults))
             .build();
     }
 

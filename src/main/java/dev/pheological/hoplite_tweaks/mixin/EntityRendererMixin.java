@@ -2,6 +2,7 @@ package dev.pheological.hoplite_tweaks.mixin;
 
 import dev.pheological.hoplite_tweaks.ChatNameHighlighter;
 import dev.pheological.hoplite_tweaks.KillCounterRenderState;
+import dev.pheological.hoplite_tweaks.PlayerNametag;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -38,6 +39,15 @@ public abstract class EntityRendererMixin {
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void hopliteTweaks$capturePlayer(Entity entity, EntityRenderState state, float partialTick, CallbackInfo ci) {
-        ((KillCounterRenderState) state).hopliteTweaks$playerId(entity instanceof Player ? entity.getUUID() : null);
+        KillCounterRenderState extraState = (KillCounterRenderState) state;
+        if (!(entity instanceof Player) || state.nameTag == null) {
+            extraState.hopliteTweaks$playerId(null);
+            extraState.hopliteTweaks$nametagHeader(null);
+            return;
+        }
+        extraState.hopliteTweaks$playerId(entity.getUUID());
+        PlayerNametag.Decoration decoration = PlayerNametag.decorate(state.nameTag, entity.getUUID());
+        state.nameTag = decoration.name();
+        extraState.hopliteTweaks$nametagHeader(decoration.header());
     }
 }

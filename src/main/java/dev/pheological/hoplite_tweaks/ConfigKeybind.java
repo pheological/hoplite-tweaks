@@ -23,7 +23,11 @@ final class ConfigKeybind {
         *///?} else {
         openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
         //?}
+            //? >=26.3 {
+            /*"key.hoplite_tweaks.open_config", InputConstants.Type.KEYBOARD,
+            *///?} else {
             "key.hoplite_tweaks.open_config", InputConstants.Type.KEYSYM,
+            //?}
             InputConstants.KEY_P,
             HopliteKeybindings.CATEGORY));
         ClientTickEvents.END_CLIENT_TICK.register(ConfigKeybind::tick);

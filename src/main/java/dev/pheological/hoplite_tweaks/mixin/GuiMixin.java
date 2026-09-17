@@ -1,6 +1,7 @@
 package dev.pheological.hoplite_tweaks.mixin;
 
 import dev.pheological.hoplite_tweaks.CooldownTitleHandler;
+import dev.pheological.hoplite_tweaks.AutoDamageSummary;
 //? >=26.2 {
 /*import net.minecraft.client.gui.Hud;
 *///?} else {
@@ -21,6 +22,7 @@ public abstract class GuiMixin {
     @Inject(method = "setTitle", at = @At("HEAD"))
     private void hopliteTweaks$clearCooldownsFromTitle(Component title, CallbackInfo callback) {
         CooldownTitleHandler.onTitle(title);
+        AutoDamageSummary.onTitle(title);
     }
 
     @Inject(method = "setSubtitle", at = @At("HEAD"))

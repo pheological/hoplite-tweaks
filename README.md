@@ -86,6 +86,7 @@ for:
 - Minecraft 1.21.11
 - Minecraft 26.1.2 (metadata also marks 26.1 and 26.1.1)
 - Minecraft 26.2
+- Minecraft 26.3
 
 Java 21 is required for 1.21.11. Java 25 or newer is required for 26.x.
 

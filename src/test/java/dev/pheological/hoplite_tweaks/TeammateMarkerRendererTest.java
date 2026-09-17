@@ -1,6 +1,7 @@
 package dev.pheological.hoplite_tweaks;
 
 import dev.pheological.hoplite_tweaks.apollo.ApolloModels;
+import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -54,6 +55,37 @@ class TeammateMarkerRendererTest {
         assertEquals(false, TeammateMarkerRenderer.outsideMinimumDistance(49.9D, 50));
         assertEquals(false, TeammateMarkerRenderer.outsideMinimumDistance(50.0D, 50));
         assertEquals(true, TeammateMarkerRenderer.outsideMinimumDistance(50.1D, 50));
+    }
+
+    @Test
+    void markerTextRequiresTargetInsideConfiguredLookCone() {
+        Vec3 forward = new Vec3(0.0D, 0.0D, 1.0D);
+        assertEquals(true, TeammateMarkerRenderer.withinViewAngle(forward,
+            directionAtDegrees(15.0D), 15));
+        assertEquals(false, TeammateMarkerRenderer.withinViewAngle(forward,
+            directionAtDegrees(16.0D), 15));
+        assertEquals(true, TeammateMarkerRenderer.withinViewAngle(forward,
+            directionAtDegrees(90.0D), 90));
+    }
+
+    @Test
+    void formatsLastSeenAgeInSecondsThenMinutes() {
+        assertEquals("last seen 0s ago", TeammateMarkerRenderer.formatLastSeen(-100));
+        assertEquals("last seen 59s ago", TeammateMarkerRenderer.formatLastSeen(59_999));
+        assertEquals("last seen 1m ago", TeammateMarkerRenderer.formatLastSeen(60_000));
+        assertEquals("last seen 12m ago", TeammateMarkerRenderer.formatLastSeen(729_999));
+    }
+
+    @Test
+    void deathMarkerFadesFromOpaqueRedToTransparent() {
+        assertEquals(0xFFFF3333, TeammateMarkerRenderer.fadedDeathColor(0, 60_000));
+        assertEquals(0x80FF3333, TeammateMarkerRenderer.fadedDeathColor(30_000, 60_000));
+        assertEquals(0x00FF3333, TeammateMarkerRenderer.fadedDeathColor(60_000, 60_000));
+    }
+
+    private Vec3 directionAtDegrees(double degrees) {
+        double radians = Math.toRadians(degrees);
+        return new Vec3(Math.sin(radians), 0.0D, Math.cos(radians));
     }
 
     private int color(String name, int serverColor) {

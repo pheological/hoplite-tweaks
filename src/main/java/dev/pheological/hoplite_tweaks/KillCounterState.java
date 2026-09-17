@@ -8,6 +8,7 @@ final class KillCounterState {
     private static final Pattern FORMATTING = Pattern.compile("(?i)§[0-9a-fk-orx]");
     private final Map<String, Set<UUID>> profiles = new HashMap<>();
     private final Map<UUID, Integer> kills = new HashMap<>();
+    private final Set<UUID> dripstoneKillers = new HashSet<>();
     private final Map<String, Long> recent = new HashMap<>();
     private Object world;
     private long missingSince = -1;
@@ -57,15 +58,33 @@ final class KillCounterState {
     }
 
     boolean accept(String text, long now) {
-        if (!trackingKills()) return false;
+        return accept(text, now, false);
+    }
+
+    boolean accept(String text, long now, boolean playerAuthored) {
+        return acceptKill(text, now, playerAuthored) != null;
+    }
+
+    Kill acceptKill(String text, long now, boolean playerAuthored) {
+        if (!trackingKills() || playerAuthored || text == null || text.contains(":")) return null;
         Kill kill = parse(text);
-        if (kill == null) return false;
+        if (kill == null) return null;
         recent.entrySet().removeIf(entry -> now - entry.getValue() >= 2_000);
         String normalized = clean(text);
-        if (recent.containsKey(normalized)) return false;
+        if (recent.containsKey(normalized)) return null;
         recent.put(normalized, now);
         kills.merge(kill.attacker(), 1, Integer::sum);
-        return true;
+        if (isPointedDripstoneKill(normalized, kill)) {
+            dripstoneKillers.add(kill.attacker());
+        }
+        return kill;
+    }
+
+    private boolean isPointedDripstoneKill(String normalized, Kill kill) {
+        String[] words = normalized.split(" ");
+        return normalized.contains(" was pricked to death by a pointed dripstone while fighting ")
+            && words.length > 0
+            && kill.attacker().equals(resolve(words[words.length - 1]));
     }
 
     /** Null sidebar means the new world's sidebar has not arrived yet. */
@@ -109,7 +128,8 @@ final class KillCounterState {
     boolean inGame() { return inGame; }
     boolean trackingKills() { return inGame && trackingKills; }
     int count(UUID id) { return kills.getOrDefault(id, 0); }
-    void resetCounts() { kills.clear(); recent.clear(); }
+    boolean hasDripstoneBadge(UUID id) { return dripstoneKillers.contains(id); }
+    void resetCounts() { kills.clear(); dripstoneKillers.clear(); recent.clear(); }
     private void resetMatch() { resetCounts(); profiles.clear(); }
     void clear() { resetMatch(); world = null; inGame = false; trackingKills = true; missingSince = -1; }
 }

@@ -2,10 +2,10 @@
   "providers": [
     {
       "type": "bitmap",
-      "file": "hoplite_tweaks:font/kill.png",
+      "file": "minecraft:item/pointed_dripstone.png",
       "ascent": 7,
       "height": 8,
-      "chars": ["\uE100"]
+      "chars": ["\uE101"]
     }
   ]
 }

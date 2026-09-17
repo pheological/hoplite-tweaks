@@ -18,6 +18,12 @@ public final class ApolloModels {
     ) {
     }
 
+    public record LastKnownTeammate(Teammate teammate, String profileName) {
+    }
+
+    public record DeathLocation(Teammate teammate, String profileName, long diedAt) {
+    }
+
     public record Cooldown(String name, String itemId, long startedAt, long durationMillis) {
         public float progress(long now) {
             if (durationMillis <= 0) {
