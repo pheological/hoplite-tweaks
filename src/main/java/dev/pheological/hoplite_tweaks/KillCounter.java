@@ -32,17 +32,16 @@ public final class KillCounter {
         ClientTickEvents.END_CLIENT_TICK.register(client -> refresh());
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> STATE.clear());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> STATE.clear());
-        // GAME is server-authored. CHAT is intentionally ignored so players cannot
-        // spoof death notices; accept() also rejects proxy-formatted colon messages.
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> accept(message, false));
+        // Hoplite may deliver ordinary chat without vanilla signatures. Inspect both
+        // channels and use its colon-free death-message format as the spoof boundary.
+        ClientReceiveMessageEvents.GAME.register((message, overlay) -> accept(message));
         ClientReceiveMessageEvents.CHAT.register((message, signed, sender, params, receivedAt) ->
-            accept(message, true));
+            accept(message));
     }
 
-    private static void accept(Component message, boolean playerAuthored) {
-        if (playerAuthored) return;
+    private static void accept(Component message) {
         refresh();
-        KillCounterState.Kill kill = STATE.acceptKill(message.getString(), now(), false);
+        KillCounterState.Kill kill = STATE.acceptKill(message.getString(), now());
         if (kill != null) {
             ApolloState.markDeath(kill.victim(), System.currentTimeMillis());
         }

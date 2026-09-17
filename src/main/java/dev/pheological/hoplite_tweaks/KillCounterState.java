@@ -58,15 +58,11 @@ final class KillCounterState {
     }
 
     boolean accept(String text, long now) {
-        return accept(text, now, false);
+        return acceptKill(text, now) != null;
     }
 
-    boolean accept(String text, long now, boolean playerAuthored) {
-        return acceptKill(text, now, playerAuthored) != null;
-    }
-
-    Kill acceptKill(String text, long now, boolean playerAuthored) {
-        if (!trackingKills() || playerAuthored || text == null || text.contains(":")) return null;
+    Kill acceptKill(String text, long now) {
+        if (!trackingKills() || text == null || text.contains(":")) return null;
         Kill kill = parse(text);
         if (kill == null) return null;
         recent.entrySet().removeIf(entry -> now - entry.getValue() >= 2_000);

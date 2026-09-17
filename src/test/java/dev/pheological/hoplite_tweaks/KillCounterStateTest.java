@@ -70,14 +70,14 @@ class KillCounterStateTest {
         assertTrue(state.hasDripstoneBadge(attacker));
     }
 
-    @Test void playerChatAndColonFormattedMessagesCannotSpoofKillsOrBadges() {
+    @Test void unsignedChannelMessagesAreAcceptedButColonMessagesCannotSpoofKillsOrBadges() {
         var state = state();
         String death = "_Victim1 was pricked to death by a Pointed Dripstone while fighting 9Attacker_";
 
-        assertFalse(state.accept(death, 0, true));
-        assertFalse(state.accept("Player: " + death, 1, false));
-        assertEquals(0, state.count(attacker));
-        assertFalse(state.hasDripstoneBadge(attacker));
+        assertTrue(state.accept(death, 0));
+        assertFalse(state.accept("Player: " + death, 2_000));
+        assertEquals(1, state.count(attacker));
+        assertTrue(state.hasDripstoneBadge(attacker));
     }
 
     @Test void dripstoneBadgeRequiresExactCauseAndFinalRecognizedAttacker() {
@@ -96,7 +96,7 @@ class KillCounterStateTest {
 
     @Test void ordinaryServerKillStillCountsWithoutBadge() {
         var state = state();
-        assertTrue(state.accept("_Victim1 was dazzled by 9Attacker_", 0, false));
+        assertTrue(state.accept("_Victim1 was dazzled by 9Attacker_", 0));
         assertEquals(1, state.count(attacker));
         assertFalse(state.hasDripstoneBadge(attacker));
     }
