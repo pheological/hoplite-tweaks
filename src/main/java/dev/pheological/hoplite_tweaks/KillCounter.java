@@ -41,9 +41,12 @@ public final class KillCounter {
 
     private static void accept(Component message) {
         refresh();
-        KillCounterState.Kill kill = STATE.acceptKill(message.getString(), now());
-        if (kill != null) {
-            ApolloState.markDeath(kill.victim(), System.currentTimeMillis());
+        String text = message.getString();
+        long now = now();
+        KillCounterState.Kill death = STATE.detectDeath(text, now);
+        STATE.acceptKill(text, now);
+        if (death != null) {
+            ApolloState.markDeath(death.victim(), System.currentTimeMillis());
         }
     }
 

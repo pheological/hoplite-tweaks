@@ -10,6 +10,7 @@ final class KillCounterState {
     private final Map<UUID, Integer> kills = new HashMap<>();
     private final Set<UUID> dripstoneKillers = new HashSet<>();
     private final Map<String, Long> recent = new HashMap<>();
+    private final Map<String, Long> recentDeaths = new HashMap<>();
     private Object world;
     private long missingSince = -1;
     private boolean inGame;
@@ -70,17 +71,43 @@ final class KillCounterState {
         if (recent.containsKey(normalized)) return null;
         recent.put(normalized, now);
         kills.merge(kill.attacker(), 1, Integer::sum);
-        if (isPointedDripstoneKill(normalized, kill)) {
+        if (isTrapKill(normalized, kill)) {
             dripstoneKillers.add(kill.attacker());
         }
         return kill;
     }
 
-    private boolean isPointedDripstoneKill(String normalized, Kill kill) {
+    Kill detectDeath(String text, long now) {
+        if (!inGame || text == null || text.contains(":")) return null;
+        Kill kill = parse(text);
+        if (kill == null) return null;
+        recentDeaths.entrySet().removeIf(entry -> now - entry.getValue() >= 2_000);
+        String normalized = clean(text);
+        if (recentDeaths.containsKey(normalized)) return null;
+        recentDeaths.put(normalized, now);
+        return kill;
+    }
+
+    private boolean isTrapKill(String normalized, Kill kill) {
         String[] words = normalized.split(" ");
-        return normalized.contains(" was pricked to death by a pointed dripstone while fighting ")
+        boolean pointedDripstone = normalized.contains(
+            " was pricked to death by a pointed dripstone while fighting ")
             && words.length > 0
             && kill.attacker().equals(resolve(words[words.length - 1]));
+        if (pointedDripstone) return true;
+
+        for (int was = 1; was + 5 < words.length; was++) {
+            if (words[was].equals("was")
+                && words[was + 1].equals("squashed")
+                && words[was + 2].equals("by")
+                && words[was + 4].equals("s")
+                && words[was + 5].equals("dripstone")
+                && was + 6 == words.length
+                && kill.attacker().equals(resolve(words[was + 3]))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Null sidebar means the new world's sidebar has not arrived yet. */
@@ -125,7 +152,7 @@ final class KillCounterState {
     boolean trackingKills() { return inGame && trackingKills; }
     int count(UUID id) { return kills.getOrDefault(id, 0); }
     boolean hasDripstoneBadge(UUID id) { return dripstoneKillers.contains(id); }
-    void resetCounts() { kills.clear(); dripstoneKillers.clear(); recent.clear(); }
+    void resetCounts() { kills.clear(); dripstoneKillers.clear(); recent.clear(); recentDeaths.clear(); }
     private void resetMatch() { resetCounts(); profiles.clear(); }
     void clear() { resetMatch(); world = null; inGame = false; trackingKills = true; missingSince = -1; }
 }

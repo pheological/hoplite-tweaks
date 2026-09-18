@@ -95,7 +95,7 @@ public final class HopliteTweaksConfigScreen {
                 .enumClass(HopliteTweaksConfig.KillPlacement.class))
             .available(config.dripstoneDisplay.nametag()).build();
         return OptionGroup.createBuilder()
-            .name(text("Trap Tracker"))
+            .name(text("Trapper Tracker"))
             .description(description("Marks players who earned a kill with pointed dripstone this match."))
             .option(toggle("Show dripstone badge", "Display one vanilla pointed-dripstone icon for qualifying attackers.",
                 defaults.dripstoneBadge, () -> config.dripstoneBadge, value -> config.dripstoneBadge = value))

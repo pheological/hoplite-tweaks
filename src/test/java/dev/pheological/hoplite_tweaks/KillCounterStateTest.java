@@ -70,6 +70,30 @@ class KillCounterStateTest {
         assertTrue(state.hasDripstoneBadge(attacker));
     }
 
+    @Test void squashedByPlayersDripstoneCountsAsATrapKill() {
+        var state = state();
+        String message = "\uE20C ELIMINATION! \uE338 _Victim1 was squashed by \uE338 9Attacker_'s dripstone.";
+
+        assertTrue(state.accept(message, 0));
+        assertEquals(1, state.count(attacker));
+        assertTrue(state.hasDripstoneBadge(attacker));
+        assertFalse(state.hasDripstoneBadge(victim));
+    }
+
+    @Test void squashedTrapBadgeRequiresTheExactPossessiveDripstoneEnding() {
+        for (String message : List.of(
+            "_Victim1 was squashed by 9Attacker_",
+            "_Victim1 was squashed by 9Attacker_'s anvil",
+            "_Victim1 was squashed near 9Attacker_'s dripstone",
+            "_Victim1 was squashed by Missing's dripstone",
+            "_Victim1 was squashed by 9Attacker_'s dripstone nearby"
+        )) {
+            var state = state();
+            state.accept(message, 0);
+            assertFalse(state.hasDripstoneBadge(attacker), message);
+        }
+    }
+
     @Test void unsignedChannelMessagesAreAcceptedButColonMessagesCannotSpoofKillsOrBadges() {
         var state = state();
         String death = "_Victim1 was pricked to death by a Pointed Dripstone while fighting 9Attacker_";
@@ -110,12 +134,28 @@ class KillCounterStateTest {
         assertTrue(state.inGame());
         assertFalse(state.trackingKills());
         assertFalse(state.accept("_Victim1 was slain by 9Attacker_", 1));
+        assertEquals(new KillCounterState.Kill(victim, attacker),
+            state.detectDeath("_Victim1 was slain by 9Attacker_", 1));
         assertEquals(0, state.count(attacker));
 
         state.update(world, true, List.of("SOLO ROYALE", "Your Stats:", "Border: +1,000"), 2, true);
         assertTrue(state.trackingKills());
         assertTrue(state.accept("_Victim1 was slain by 9Attacker_", 3));
         assertEquals(1, state.count(attacker));
+    }
+
+    @Test void deathDetectionUsesMatchStateButNotKillTrackingPhase() {
+        var state = new KillCounterState();
+        state.update(world, true, List.of("GAME STATS", "Mining Phase in:"), 0, true);
+        state.observe("_Victim1", victim);
+        state.observe("9Attacker_", attacker);
+
+        String death = "_Victim1 was slain by 9Attacker_";
+        assertEquals(new KillCounterState.Kill(victim, attacker), state.detectDeath(death, 0));
+        assertNull(state.detectDeath(death, 1_999));
+        assertEquals(new KillCounterState.Kill(victim, attacker), state.detectDeath(death, 2_000));
+        assertNull(state.detectDeath("Player: " + death, 4_000));
+        assertFalse(state.accept(death, 4_000));
     }
 
     @Test void dimensionTransitionWaitsAndPreservesMatch() {
