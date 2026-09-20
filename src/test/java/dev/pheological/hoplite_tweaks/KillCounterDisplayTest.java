@@ -3,6 +3,7 @@ package dev.pheological.hoplite_tweaks;
 import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig.KillDisplay;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
 import java.util.List;
@@ -50,6 +51,20 @@ class KillCounterDisplayTest {
     @Test void unrelatedPrivateUseIconsDoNotSuppressOurCounter() {
         Component name = Component.literal("\uE000 Player");
         assertEquals("\uE000 Player \uE100 2", KillCounter.append(name, KillCounter.label(2)).getString());
+    }
+
+    @Test void preservesExistingLegendWatchSuffixAndItsFont() {
+        FontDescription legendFont = new FontDescription.Resource(
+            Identifier.fromNamespaceAndPath("legendwatch", "icons"));
+        Component legendIcon = Component.literal("\uE00C")
+            .withStyle(style -> style.withFont(legendFont));
+        Component decoratedName = Component.empty().append("Player ").append(legendIcon);
+
+        Component output = KillCounter.append(decoratedName, KillCounter.label(2));
+
+        assertEquals("Player \uE00C \uE100 2", output.getString());
+        assertTrue(output.toFlatList().stream().anyMatch(part ->
+            part.getString().equals("\uE00C") && legendFont.equals(part.getStyle().getFont())));
     }
 
     @Test void dripstoneBadgeUsesAnIndependentFontAndCannotDuplicate() {
