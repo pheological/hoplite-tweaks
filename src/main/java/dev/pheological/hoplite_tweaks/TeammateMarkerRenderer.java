@@ -44,6 +44,8 @@ public final class TeammateMarkerRenderer {
     private static final boolean HEALTH_DISPLAY_APPROVED = false;
     private static final Identifier MARKER_TEXTURE =
         Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "textures/gui/teammate_marker.png");
+    private static final Identifier SKULL_TEXTURE =
+        Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "textures/gui/skull.png");
     private static final Identifier SOLID_TEXTURE =
         Identifier.fromNamespaceAndPath("minecraft", "textures/block/white_concrete.png");
     private static final int FULL_BRIGHT = 0x00F000F0;
@@ -211,7 +213,7 @@ public final class TeammateMarkerRenderer {
         Vec3 relative = marker.position.subtract(cameraPosition);
         double height = 2.15D + config.markerHeightPercent / 100.0D;
         int color = marker.death
-            ? fadedDeathColor(System.currentTimeMillis() - marker.diedAt,
+            ? fadedTextureColor(System.currentTimeMillis() - marker.diedAt,
                 config.deathMarkerDurationSeconds * 1_000L)
             : marker.lastKnown ? config.lastKnownMarkerColor : TeammateRole.colorFor(
                 marker.teammate,
@@ -240,9 +242,12 @@ public final class TeammateMarkerRenderer {
             context.commandQueue().submitCustomGeometry(
             //?}
                 matrices,
-                RenderTypes.textSeeThrough(config.markerShape == HopliteTweaksConfig.MarkerShape.CHEVRON
-                    ? MARKER_TEXTURE : SOLID_TEXTURE),
-                (pose, vertices) -> markerGeometry(pose, vertices, color, config.markerShape)
+                RenderTypes.textSeeThrough(marker.death
+                    ? SKULL_TEXTURE
+                    : config.markerShape == HopliteTweaksConfig.MarkerShape.CHEVRON
+                        ? MARKER_TEXTURE : SOLID_TEXTURE),
+                (pose, vertices) -> markerGeometry(
+                    pose, vertices, color, config.markerShape, marker.death)
             );
             matrices.popPose();
         }
@@ -367,10 +372,11 @@ public final class TeammateMarkerRenderer {
         PoseStack.Pose pose,
         VertexConsumer vertices,
         int color,
-        HopliteTweaksConfig.MarkerShape shape
+        HopliteTweaksConfig.MarkerShape shape,
+        boolean death
     ) {
         float s = MARKER_HALF_SIZE;
-        if (shape == HopliteTweaksConfig.MarkerShape.CHEVRON) {
+        if (death || shape == HopliteTweaksConfig.MarkerShape.CHEVRON) {
             vertex(vertices, pose, -s, -s, 0.0F, 0.0F, 1.0F, color);
             vertex(vertices, pose, s, -s, 0.0F, 1.0F, 1.0F, color);
             vertex(vertices, pose, s, s, 0.0F, 1.0F, 0.0F, color);
@@ -536,6 +542,10 @@ public final class TeammateMarkerRenderer {
         double remaining = 1.0D - Math.clamp((double) elapsedMillis / durationMillis, 0.0D, 1.0D);
         int alpha = (int) Math.round(255.0D * remaining);
         return alpha << 24 | DEATH_COLOR & 0x00FFFFFF;
+    }
+
+    static int fadedTextureColor(long elapsedMillis, long durationMillis) {
+        return fadedDeathColor(elapsedMillis, durationMillis) & 0xFF000000 | 0x00FFFFFF;
     }
 
     static boolean withinViewAngle(Vec3 viewDirection, Vec3 targetDirection, int angleDegrees) {

@@ -33,6 +33,35 @@ final class AntiSlurFilterTest {
     }
 
     @Test
+    void questionMarkRulesOnlyMatchStandaloneWordsOrPhrases() {
+        AntiSlurFilter.RuleSet rules = AntiSlurFilter.parseRules("""
+            ?nga
+            ?blocked phrase
+            """);
+
+        assertTrue(AntiSlurFilter.matches("nga", rules));
+        assertTrue(AntiSlurFilter.matches("They used NGA!", rules));
+        assertFalse(AntiSlurFilter.matches("just the ingame one", rules));
+        assertFalse(AntiSlurFilter.matches("manga", rules));
+        assertTrue(AntiSlurFilter.matches("A blocked phrase should stop", rules));
+        assertFalse(AntiSlurFilter.matches("A blocked phrases variant is allowed", rules));
+    }
+
+    @Test
+    void bundledShortRulesDoNotBlockWordsThatContainThem() throws Exception {
+        try (InputStream stream = AntiSlurFilter.class.getResourceAsStream(
+            "/assets/hoplite_tweaks/blocked-words.txt"
+        )) {
+            assertNotNull(stream);
+            AntiSlurFilter.RuleSet rules = AntiSlurFilter.parseRules(
+                new String(stream.readAllBytes(), StandardCharsets.UTF_8)
+            );
+            assertFalse(AntiSlurFilter.matches("frogs spawn in mangrove swamps", rules));
+            assertFalse(AntiSlurFilter.matches("just the ingame one", rules));
+        }
+    }
+
+    @Test
     void normalizesCommonCharacterSubstitutions() {
         AntiSlurFilter.RuleSet rules = AntiSlurFilter.parseRules("example");
         assertTrue(AntiSlurFilter.matches("3x4mpl3", rules));

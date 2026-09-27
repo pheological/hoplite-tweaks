@@ -63,6 +63,8 @@ The anti-slur module makes a read-only HTTPS GET request to the
 [`blocked-words.txt`](./blocked-words.txt) file in this repository when the mod starts and when
 the player joins a server. This request only downloads moderation rules. Hoplite Tweaks does not
 upload chat messages, player identifiers, server information, telemetry, or other user data.
+Rules normally match substrings; prefix a rule with `?` to match only a standalone word or phrase,
+and prefix it with `!` to define an allowed exception.
 
 The chat-name highlighter similarly downloads [`highlighted-players.txt`](./highlighted-players.txt).
 Both files are bundled into releases as immediate offline fallbacks and refreshed from this

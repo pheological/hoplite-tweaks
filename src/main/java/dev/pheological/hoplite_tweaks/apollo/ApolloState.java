@@ -59,9 +59,14 @@ public final class ApolloState {
         TEAMMATES.clear();
         for (ApolloModels.Teammate member : members) {
             ApolloModels.Teammate prior = previous.remove(member.playerId());
-            // A dimension change is not a disconnect, so do not leave a stale marker.
             PENDING_DISCONNECTS.remove(member.playerId());
             LAST_KNOWN.keySet().removeIf(key -> key.playerId().equals(member.playerId()));
+            // Only an actual removal followed by a reappearance proves that a dead
+            // player was revived. A corpse may remain in consecutive snapshots.
+            if (prior == null) {
+                DEATH_LOCATIONS.remove(member.playerId());
+                EXPIRED_CORPSES.remove(member.playerId());
+            }
             MOTION.compute(member.playerId(), (id, motion) -> new TeammateMotion(member, motion, now));
             TEAMMATES.put(member.playerId(), member);
         }

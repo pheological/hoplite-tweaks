@@ -177,6 +177,7 @@ public final class AntiSlurFilter {
 
     static RuleSet parseRules(String text) {
         List<String> blocked = new ArrayList<>();
+        List<String> standalone = new ArrayList<>();
         List<String> allowed = new ArrayList<>();
         for (String inputLine : text.split("\\R")) {
             String line = inputLine.replace("\uFEFF", "").trim();
@@ -184,28 +185,37 @@ public final class AntiSlurFilter {
                 continue;
             }
             boolean exception = line.startsWith("!");
-            String normalized = normalize(exception ? line.substring(1) : line);
+            boolean standaloneRule = !exception && line.startsWith("?");
+            String rule = exception || standaloneRule ? line.substring(1) : line;
+            String normalized = normalize(rule);
             if (normalized.isEmpty() || normalized.length() > MAX_RULE_LENGTH) {
                 continue;
             }
-            List<String> target = exception ? allowed : blocked;
+            List<String> target = exception ? allowed : standaloneRule ? standalone : blocked;
             if (!target.contains(normalized)) {
                 target.add(normalized);
             }
-            if (blocked.size() + allowed.size() >= MAX_RULES) {
+            if (blocked.size() + standalone.size() + allowed.size() >= MAX_RULES) {
                 break;
             }
         }
-        return new RuleSet(List.copyOf(blocked), List.copyOf(allowed));
+        return new RuleSet(List.copyOf(blocked), List.copyOf(standalone), List.copyOf(allowed));
     }
 
     static boolean matches(String message, RuleSet ruleSet) {
         String padded = " " + normalize(message) + " ";
+        String standalonePadded = " " + normalize(message, true) + " ";
         for (String exception : ruleSet.allowed()) {
             padded = padded.replace(" " + exception + " ", " ");
+            standalonePadded = standalonePadded.replace(" " + exception + " ", " ");
         }
         for (String blocked : ruleSet.blocked()) {
             if (padded.contains(blocked)) {
+                return true;
+            }
+        }
+        for (String standalone : ruleSet.standalone()) {
+            if (standalonePadded.contains(" " + standalone + " ")) {
                 return true;
             }
         }
@@ -213,6 +223,10 @@ public final class AntiSlurFilter {
     }
 
     static String normalize(String input) {
+        return normalize(input, false);
+    }
+
+    private static String normalize(String input, boolean symbolBoundaries) {
         String normalized = Normalizer.normalize(input, Normalizer.Form.NFKC)
             .toLowerCase(Locale.ROOT);
         StringBuilder output = new StringBuilder(normalized.length());
@@ -221,10 +235,13 @@ public final class AntiSlurFilter {
             char character = normalized.charAt(index);
             char replacement = switch (character) {
                 case '0' -> 'o';
-                case '1', '!' -> 'i';
+                case '1' -> 'i';
+                case '!' -> symbolBoundaries && !insideWord(normalized, index) ? ' ' : 'i';
                 case '3' -> 'e';
-                case '4', '@' -> 'a';
-                case '5', '$' -> 's';
+                case '4' -> 'a';
+                case '@' -> symbolBoundaries && !insideWord(normalized, index) ? ' ' : 'a';
+                case '5' -> 's';
+                case '$' -> symbolBoundaries && !insideWord(normalized, index) ? ' ' : 's';
                 case '7' -> 't';
                 default -> character;
             };
@@ -239,7 +256,13 @@ public final class AntiSlurFilter {
         return output.toString().trim();
     }
 
-    record RuleSet(List<String> blocked, List<String> allowed) {
-        private static final RuleSet EMPTY = new RuleSet(List.of(), List.of());
+    private static boolean insideWord(String input, int index) {
+        return index > 0 && index + 1 < input.length()
+            && Character.isLetterOrDigit(input.charAt(index - 1))
+            && Character.isLetterOrDigit(input.charAt(index + 1));
+    }
+
+    record RuleSet(List<String> blocked, List<String> standalone, List<String> allowed) {
+        private static final RuleSet EMPTY = new RuleSet(List.of(), List.of(), List.of());
     }
 }

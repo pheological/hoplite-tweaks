@@ -217,9 +217,9 @@ public final class HopliteTweaksConfigScreen {
                     value -> config.lastKnownMarkerColor = value))
                 .build())
             .group(OptionGroup.createBuilder()
-                .name(text("Death locations"))
+                .name(text("Corpse/Death Tracker"))
                 .description(description("Marks a teammate's last reported position when a trusted server death message is detected."))
-                .option(toggle("Show death locations", "Draws a fading red marker where a teammate died.",
+                .option(toggle("Show death locations", "Draws a fading skull where a teammate died.",
                     defaults.showDeathLocations, () -> config.showDeathLocations,
                     value -> config.showDeathLocations = value))
                 .option(slider("Fade duration", "Seconds before a death marker fully fades away.",

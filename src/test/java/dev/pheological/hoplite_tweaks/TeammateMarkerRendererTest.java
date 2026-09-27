@@ -81,6 +81,9 @@ class TeammateMarkerRendererTest {
         assertEquals(0xFFFF3333, TeammateMarkerRenderer.fadedDeathColor(0, 60_000));
         assertEquals(0x80FF3333, TeammateMarkerRenderer.fadedDeathColor(30_000, 60_000));
         assertEquals(0x00FF3333, TeammateMarkerRenderer.fadedDeathColor(60_000, 60_000));
+        assertEquals(0xFFFFFFFF, TeammateMarkerRenderer.fadedTextureColor(0, 60_000));
+        assertEquals(0x80FFFFFF, TeammateMarkerRenderer.fadedTextureColor(30_000, 60_000));
+        assertEquals(0x00FFFFFF, TeammateMarkerRenderer.fadedTextureColor(60_000, 60_000));
     }
 
     private Vec3 directionAtDegrees(double degrees) {

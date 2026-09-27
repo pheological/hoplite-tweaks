@@ -4,6 +4,11 @@
 
 # Changelog
 
+## 1.2.3
+
+- Fixed the corpse/death tracker.
+- Improved the anti-slur filter.
+
 ## 1.0.0
 
 - Added a default-enabled, high-contrast distance label near the base of a tracked supply crate beam

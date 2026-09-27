@@ -72,6 +72,35 @@ class ApolloLastKnownTeammateTest {
     }
 
     @Test
+    void removalThenReappearanceRevivesAPlayerAndAllowsLaterArchiving() {
+        ApolloModels.Teammate beforeDeath = sample("minecraft:overworld", 12.0, 1_000L);
+        ApolloState.observeProfile(PLAYER, "Ann");
+        ApolloState.replaceTeammatesAuthoritative(List.of(beforeDeath));
+        assertTrue(ApolloState.markDeath(PLAYER, 5_000L));
+
+        ApolloState.replaceTeammatesAuthoritative(List.of());
+        ApolloModels.Teammate revived = sample("minecraft:overworld", 24.0, 6_000L);
+        ApolloState.replaceTeammatesAuthoritative(List.of(revived));
+
+        assertEquals(revived, ApolloState.teammates().iterator().next());
+        assertTrue(ApolloState.deathLocations().isEmpty());
+
+        ApolloState.replaceTeammatesAuthoritative(List.of());
+        assertEquals(revived, ApolloState.lastKnownTeammates().iterator().next().teammate());
+    }
+
+    @Test
+    void consecutiveCorpseSnapshotsDoNotCountAsARevival() {
+        ApolloModels.Teammate corpse = sample("minecraft:overworld", 12.0, 1_000L);
+        ApolloState.replaceTeammatesAuthoritative(List.of(corpse));
+        assertTrue(ApolloState.markDeath(PLAYER, 5_000L));
+
+        ApolloState.replaceTeammatesAuthoritative(List.of(corpse));
+
+        assertFalse(ApolloState.deathLocations().isEmpty());
+    }
+
+    @Test
     void corpseAnnouncementExpiresEveryWorldForOnlyTheNamedPlayer() {
         UUID similar = UUID.randomUUID();
         ApolloState.observeProfile(PLAYER, "Ann");
