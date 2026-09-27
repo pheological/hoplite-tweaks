@@ -83,7 +83,9 @@ fun Project.configureModPublishing(ctx: Context) {
 		val deps = ctx.extension.dependencies
 
 		modrinth(ctx, ctx.publishAdditionalVersions, mrStaging, modrinthAccessToken, deps)
-		if (!mrStaging) curseforge(ctx, ctx.publishAdditionalVersions, curseforgeAccessToken, deps)
+		if (!mrStaging && !env("PUB_CURSEFORGE_PROJECT_ID").isNullOrBlank() && !curseforgeAccessToken.isNullOrBlank()) {
+			curseforge(ctx, ctx.publishAdditionalVersions, curseforgeAccessToken, deps)
+		}
 	}
 }
 

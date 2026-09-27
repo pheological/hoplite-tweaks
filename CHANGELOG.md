@@ -4,6 +4,10 @@
 
 # Changelog
 
+## 1.2.8
+
+- Fixed platform publishing so an unconfigured CurseForge target cannot interrupt Modrinth releases.
+
 ## 1.2.7
 
 - Fixed the Modrinth release job to use Java 25 for Minecraft 26.1 and 26.2 builds.
