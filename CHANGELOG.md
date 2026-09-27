@@ -4,10 +4,6 @@
 
 # Changelog
 
-## 1.2.9
-
-- Moved nearby teammate distance labels upward to avoid overlapping Minecraft nametags.
-
 ## 1.2.8
 
 - Fixed platform publishing so an unconfigured CurseForge target cannot interrupt Modrinth releases.
@@ -20,6 +16,7 @@
 ## 1.2.6
 
 - Fixed clean-environment release builds by resolving Quilt parser dependencies from Quilt's Maven repository.
+- Moved nearby teammate distance labels upward to avoid overlapping Minecraft nametags.
 
 ## 1.2.5
 
