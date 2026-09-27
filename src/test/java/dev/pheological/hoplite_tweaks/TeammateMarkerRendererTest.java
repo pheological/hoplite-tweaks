@@ -1,14 +1,37 @@
 package dev.pheological.hoplite_tweaks;
 
 import dev.pheological.hoplite_tweaks.apollo.ApolloModels;
+import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TeammateMarkerRendererTest {
+    @Test
+    void markerShapesKeepTheirBottomEdgeAlignedWithText() {
+        float chevronBottom = TeammateMarkerRenderer.markerVerticalOffset(
+            HopliteTweaksConfig.MarkerShape.CHEVRON, false) - 0.18F;
+        float triangleBottom = TeammateMarkerRenderer.markerVerticalOffset(
+            HopliteTweaksConfig.MarkerShape.TRIANGLE, false) - 0.22F;
+        float diamondBottom = TeammateMarkerRenderer.markerVerticalOffset(
+            HopliteTweaksConfig.MarkerShape.DIAMOND, false) - 0.30F;
+
+        assertEquals(chevronBottom, triangleBottom, 0.0001F);
+        assertEquals(chevronBottom, diamondBottom, 0.0001F);
+    }
+
+    @Test
+    void alwaysShowDistanceIsIndependentFromLookingAtMarker() {
+        assertTrue(TeammateMarkerRenderer.shouldRevealDistance(false, true));
+        assertTrue(TeammateMarkerRenderer.shouldRevealDistance(true, false));
+        assertFalse(TeammateMarkerRenderer.shouldRevealDistance(false, false));
+    }
+
     private static final int KING = 0xFFFFD43B;
     private static final int PARTY = 0xFF4B9CFF;
     private static final int TEAMMATE = 0xFF54E37A;

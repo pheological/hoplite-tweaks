@@ -1,5 +1,6 @@
 {
   "key.hoplite_tweaks.open_config": "Open Hoplite Tweaks",
+  "key.hoplite_tweaks.toggle_team_tracker": "Toggle Team Tracker",
   "key.hoplite_tweaks.toggle_supply_beams": "Toggle Supply Crate Beams",
   "key.category.hoplite_tweaks.main": "Hoplite Tweaks"
 }

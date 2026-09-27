@@ -57,7 +57,8 @@ public final class TeammateMarkerRenderer {
     private static final float MARKER_HALF_SIZE = 0.18F;
     private static final float MARKER_HALF_HEIGHT = 0.22F;
     private static final float DIAMOND_HALF_HEIGHT = 0.30F;
-    private static final float MARKER_VERTICAL_OFFSET = 0.74F;
+    private static final float TEXT_VERTICAL_OFFSET = 0.42F;
+    private static final float MARKER_TEXT_GAP = 0.02F;
     private static final Pattern HEART_HEALTH = Pattern.compile(
         "(\\d+(?:\\.\\d+)?)\\s*(?:❤|♥|hp\\b)",
         Pattern.CASE_INSENSITIVE
@@ -247,7 +248,7 @@ public final class TeammateMarkerRenderer {
             && config.hideMarkerWhenTeammateInRenderDistance;
         if (!hideShape) {
             matrices.pushPose();
-            matrices.translate(0.0D, MARKER_VERTICAL_OFFSET * scale, 0.0D);
+            matrices.translate(0.0D, markerVerticalOffset(config.markerShape, marker.death) * scale, 0.0D);
             //? >=26.3 {
             /*matrices.rotate(cameraRotation);
             *///?} else {
@@ -273,7 +274,9 @@ public final class TeammateMarkerRenderer {
         boolean revealText = !config.revealMarkerTextOnLook
             || withinViewAngle(viewDirection, relative.add(0.0D, height, 0.0D), config.markerTextViewAngle);
         Component nameLabel = revealText ? markerNameLabel(marker, config) : null;
-        Component distanceLabel = revealText ? markerDistanceLabel(marker, config) : null;
+        Component distanceLabel = shouldRevealDistance(revealText, config.alwaysShowTeammateDistance)
+            ? markerDistanceLabel(marker, config)
+            : null;
         Component healthLabel = markerHealthLabel(marker);
         if (nameLabel != null || distanceLabel != null || healthLabel != null) {
             Minecraft client = Minecraft.getInstance();
@@ -283,7 +286,7 @@ public final class TeammateMarkerRenderer {
             float textScale = 0.025F * (float) scale * config.markerTextScalePercent / 100.0F;
 
             matrices.pushPose();
-            matrices.translate(0.0D, 0.42D * scale, 0.0D);
+            matrices.translate(0.0D, TEXT_VERTICAL_OFFSET * scale, 0.0D);
             //? >=26.3 {
             /*matrices.rotate(cameraRotation);
             *///?} else {
@@ -636,6 +639,23 @@ public final class TeammateMarkerRenderer {
         }
         double cosine = viewDirection.normalize().dot(targetDirection.normalize());
         return cosine >= Math.cos(Math.toRadians(Math.clamp(angleDegrees, 0, 90)));
+    }
+
+    static float markerVerticalOffset(HopliteTweaksConfig.MarkerShape shape, boolean death) {
+        float halfHeight;
+        if (death || shape == HopliteTweaksConfig.MarkerShape.CHEVRON
+            || shape == HopliteTweaksConfig.MarkerShape.SQUARE) {
+            halfHeight = MARKER_HALF_SIZE;
+        } else if (shape == HopliteTweaksConfig.MarkerShape.DIAMOND) {
+            halfHeight = DIAMOND_HALF_HEIGHT;
+        } else {
+            halfHeight = MARKER_HALF_HEIGHT;
+        }
+        return TEXT_VERTICAL_OFFSET + MARKER_TEXT_GAP + halfHeight;
+    }
+
+    static boolean shouldRevealDistance(boolean lookingAtMarker, boolean alwaysShowDistance) {
+        return lookingAtMarker || alwaysShowDistance;
     }
 
     private static float parseHealth(String value) {

@@ -179,6 +179,19 @@ public final class HopliteTweaksConfigScreen {
         return ConfigCategory.createBuilder()
             .name(text("Team View"))
             .tooltip(text("Teammate markers, labels, role colors, and duel glow."))
+            .option(ButtonOption.createBuilder()
+                .name(text("Tracker and menu keybinds"))
+                .text(text("Open Controls"))
+                .description(description("Assign Toggle Team Tracker or change Open Hoplite Tweaks under Hoplite Tweaks."))
+                .action(screen -> {
+                    Minecraft client = Minecraft.getInstance();
+                    //? >=26.2 {
+                    /*client.gui.setScreen(new KeyBindsScreen(screen, client.options));
+                    *///?} else {
+                    client.setScreen(new KeyBindsScreen(screen, client.options));
+                    //?}
+                })
+                .build())
             .group(OptionGroup.createBuilder()
                 .name(text("World marker"))
                 .option(toggle("Show teammate markers", "Draw a marker above each Apollo teammate.",
@@ -260,6 +273,10 @@ public final class HopliteTweaksConfigScreen {
                 .option(toggle("Show distance", "Displays the distance to the teammate.",
                     defaults.showTeammateDistance, () -> config.showTeammateDistance,
                     value -> config.showTeammateDistance = value))
+                .option(toggle("Always show distance",
+                    "Keeps distance visible when names are set to appear only while looking at a teammate.",
+                    defaults.alwaysShowTeammateDistance, () -> config.alwaysShowTeammateDistance,
+                    value -> config.alwaysShowTeammateDistance = value))
                 .option(toggle("Hide distance when teammate is in render distance",
                     "Hides distance for teammates Minecraft is already rendering.",
                     defaults.hideDistanceWhenTeammateInRenderDistance,

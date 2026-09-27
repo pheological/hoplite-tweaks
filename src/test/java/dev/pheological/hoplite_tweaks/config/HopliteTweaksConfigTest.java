@@ -193,4 +193,24 @@ class HopliteTweaksConfigTest {
         assertEquals(0xFF123456, config.disconnectedBeamColor);
         assertEquals(0xFF654321, config.deathBeamColor);
     }
+
+    @Test
+    void preVersionFourteenAlwaysShowsDistanceByDefault() {
+        HopliteTweaksConfig config = new HopliteTweaksConfig();
+        config.alwaysShowTeammateDistance = false;
+
+        HopliteTweaksConfig.migrate(config, 13);
+
+        assertTrue(config.alwaysShowTeammateDistance);
+    }
+
+    @Test
+    void currentConfigPreservesAlwaysShowDistancePreference() {
+        HopliteTweaksConfig config = new HopliteTweaksConfig();
+        config.alwaysShowTeammateDistance = false;
+
+        HopliteTweaksConfig.migrate(config, 14);
+
+        assertFalse(config.alwaysShowTeammateDistance);
+    }
 }

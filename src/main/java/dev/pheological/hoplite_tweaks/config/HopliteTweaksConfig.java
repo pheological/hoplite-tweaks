@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
-    private static final int CURRENT_CONFIG_VERSION = 13;
+    private static final int CURRENT_CONFIG_VERSION = 14;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
 
@@ -51,6 +51,7 @@ public final class HopliteTweaksConfig {
     public boolean showCooldownsInHotbar = true;
     public boolean showCooldownsAtTop = false;
     public boolean showTeammateDistance = true;
+    public boolean alwaysShowTeammateDistance = true;
     public boolean revealMarkerTextOnLook = false;
     public int markerTextViewAngle = 15;
     public boolean hideDistanceWhenTeammateInRenderDistance = true;
@@ -203,6 +204,9 @@ public final class HopliteTweaksConfig {
             config.trackerBeamHeight = 128;
             config.trackerBeamThicknessPercent = 100;
             config.trackerBeamOpacityPercent = 65;
+        }
+        if (loadedVersion < 14) {
+            config.alwaysShowTeammateDistance = true;
         }
     }
 
