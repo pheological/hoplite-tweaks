@@ -313,7 +313,7 @@ public final class TeammateMarkerRenderer {
                     matrices,
                     distanceLabel,
                     healthLabel,
-                    nameLabel == null ? 0.0F : 10.0F,
+                    markerWidgetRowY(marker.inRenderDistance, nameLabel != null),
                     background
                 );
             }
@@ -667,6 +667,13 @@ public final class TeammateMarkerRenderer {
 
     static boolean shouldRevealDistance(boolean lookingAtMarker, boolean alwaysShowDistance) {
         return lookingAtMarker || alwaysShowDistance;
+    }
+
+    static float markerWidgetRowY(boolean inRenderDistance, boolean hasTrackerName) {
+        if (hasTrackerName) {
+            return 10.0F;
+        }
+        return inRenderDistance ? -4.0F : 0.0F;
     }
 
     private static boolean isYellowScoreboardTeam(Minecraft client, java.util.UUID playerId) {

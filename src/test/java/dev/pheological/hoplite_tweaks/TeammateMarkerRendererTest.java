@@ -32,6 +32,13 @@ class TeammateMarkerRendererTest {
         assertFalse(TeammateMarkerRenderer.shouldRevealDistance(false, false));
     }
 
+    @Test
+    void nearbyDistanceWithoutTrackerNameMovesAboveVanillaNametag() {
+        assertEquals(-4.0F, TeammateMarkerRenderer.markerWidgetRowY(true, false));
+        assertEquals(0.0F, TeammateMarkerRenderer.markerWidgetRowY(false, false));
+        assertEquals(10.0F, TeammateMarkerRenderer.markerWidgetRowY(true, true));
+    }
+
     private static final int KING = 0xFFFFD43B;
     private static final int PARTY = 0xFF4B9CFF;
     private static final int TEAMMATE = 0xFF54E37A;
