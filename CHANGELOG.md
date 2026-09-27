@@ -4,6 +4,10 @@
 
 # Changelog
 
+## 1.2.6
+
+- Fixed clean-environment release builds by resolving Quilt parser dependencies from Quilt's Maven repository.
+
 ## 1.2.5
 
 - Added keybinds for toggling Team View and opening its settings.
