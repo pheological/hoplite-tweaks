@@ -8,6 +8,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HopliteTweaksConfigTest {
     @Test
+    void teamViewDefaultsMatchOneClientTwentySixPointTwoProfile() {
+        HopliteTweaksConfig config = new HopliteTweaksConfig();
+
+        assertTrue(config.teammateMarkers);
+        assertTrue(config.showTeammateName);
+        assertTrue(config.showTeammateDistance);
+        assertTrue(config.alwaysShowTeammateDistance);
+        assertTrue(config.revealMarkerTextOnLook);
+        assertEquals(5, config.markerTextViewAngle);
+        assertTrue(config.hideDistanceWhenTeammateInRenderDistance);
+        assertFalse(config.hideMarkerWhenTeammateInRenderDistance);
+        assertEquals(100, config.markerScalePercent);
+        assertEquals(0, config.markerHeightPercent);
+        assertEquals(0, config.markerMinDistance);
+        assertEquals(100, config.markerTextScalePercent);
+        assertEquals(HopliteTweaksConfig.MarkerShape.CHEVRON, config.markerShape);
+        assertTrue(config.markerTextBackground);
+    }
+
+    @Test
     void preVersionSixConfigEnablesSupplyBeamDistanceWithoutChangingOtherPreferences() {
         HopliteTweaksConfig config = new HopliteTweaksConfig();
         config.showSupplyBeamDistance = false;

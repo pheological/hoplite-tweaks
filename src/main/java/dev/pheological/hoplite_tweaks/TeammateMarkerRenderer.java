@@ -85,7 +85,6 @@ public final class TeammateMarkerRenderer {
         HopliteTweaksConfig config = HopliteTweaksConfig.get();
         if (!HopliteSession.isActive()
             || !config.enabled
-            || !config.teammateMarkers
             || client.player == null
             || client.level == null) {
             return;
@@ -103,12 +102,14 @@ public final class TeammateMarkerRenderer {
         float tickDelta = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         String dimension = client.level.dimension().identifier().getPath();
-        Stream<Marker> liveMarkers = ApolloState.teammates().stream()
-            .filter(teammate -> !teammate.playerId().equals(client.player.getUUID()))
-            .filter(teammate -> ApolloState.deathLocations().stream()
-                .noneMatch(death -> death.teammate().playerId().equals(teammate.playerId())))
-            .filter(teammate -> sameDimension(teammate.world(), dimension))
-            .map(teammate -> marker(client, teammate, tickDelta, cameraPosition));
+        Stream<Marker> liveMarkers = config.teammateMarkers
+            ? ApolloState.teammates().stream()
+                .filter(teammate -> !teammate.playerId().equals(client.player.getUUID()))
+                .filter(teammate -> ApolloState.deathLocations().stream()
+                    .noneMatch(death -> death.teammate().playerId().equals(teammate.playerId())))
+                .filter(teammate -> sameDimension(teammate.world(), dimension))
+                .map(teammate -> marker(client, teammate, tickDelta, cameraPosition))
+            : Stream.empty();
         Stream<Marker> lastKnownMarkers = config.showLastKnownLocations
             ? ApolloState.lastKnownTeammates().stream()
                 .filter(entry -> !entry.teammate().playerId().equals(client.player.getUUID()))

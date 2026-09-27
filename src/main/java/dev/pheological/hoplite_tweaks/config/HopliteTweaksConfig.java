@@ -52,10 +52,10 @@ public final class HopliteTweaksConfig {
     public boolean showCooldownsAtTop = false;
     public boolean showTeammateDistance = true;
     public boolean alwaysShowTeammateDistance = true;
-    public boolean revealMarkerTextOnLook = false;
-    public int markerTextViewAngle = 15;
+    public boolean revealMarkerTextOnLook = true;
+    public int markerTextViewAngle = 5;
     public boolean hideDistanceWhenTeammateInRenderDistance = true;
-    public boolean hideMarkerWhenTeammateInRenderDistance = true;
+    public boolean hideMarkerWhenTeammateInRenderDistance = false;
     public boolean compactCooldowns = false;
     public boolean partyMessagePing = true;
     public boolean autoPartyChat = false;
@@ -68,7 +68,7 @@ public final class HopliteTweaksConfig {
     public boolean antiSlur = true;
     public boolean messageDelay = false;
     public int markerScalePercent = 100;
-    public int markerHeightPercent = 35;
+    public int markerHeightPercent = 0;
     public int markerMinDistance = 0;
     public int markerTextScalePercent = 100;
     public int kingMarkerColor = 0xFFFFD400;
@@ -82,7 +82,7 @@ public final class HopliteTweaksConfig {
     public int trackerBeamOpacityPercent = 65;
     public int markerNameColor = 0xFFFFFFFF;
     public int markerDistanceColor = 0xFFFFFFFF;
-    public MarkerShape markerShape = MarkerShape.INVERTED_TRIANGLE;
+    public MarkerShape markerShape = MarkerShape.CHEVRON;
     public boolean markerTextBackground = true;
     public int hudXPercent = 100;
     public int hudYPercent = 100;
