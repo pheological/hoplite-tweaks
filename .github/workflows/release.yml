@@ -212,6 +212,25 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Publish to Platforms
-        # Minecraft 26.3 requires separate, explicit owner approval.
-        run: ./gradlew publish1.21.11 publish26.1.2 publish26.2 --stacktrace
+      - name: Validate release JAR names
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          for MC_VERSION in 1.21.11 26.1.2 26.2; do
+            JAR="build/libs/${TAG}/hoplite_tweaks-${TAG}-fabric+${MC_VERSION}.jar"
+            if [[ ! -f "$JAR" ]]; then
+              echo "::error::Missing correctly named release JAR: $JAR"
+              exit 1
+            fi
+          done
+
+      # Keep these as separate steps so GitHub Actions cannot reorder or
+      # parallelize platform uploads. Minecraft 26.3 requires separate,
+      # explicit owner approval.
+      - name: Publish Minecraft 1.21.11 to Modrinth
+        run: ./gradlew publish1.21.11 --no-parallel --stacktrace
+
+      - name: Publish Minecraft 26.1.2 to Modrinth
+        run: ./gradlew publish26.1.2 --no-parallel --stacktrace
+
+      - name: Publish Minecraft 26.2 to Modrinth
+        run: ./gradlew publish26.2 --no-parallel --stacktrace
