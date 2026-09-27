@@ -13,9 +13,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
-    private static final int CURRENT_CONFIG_VERSION = 12;
+    private static final int CURRENT_CONFIG_VERSION = 13;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("hoplite-tweaks.json");
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
 
     public int configVersion = CURRENT_CONFIG_VERSION;
@@ -42,7 +41,9 @@ public final class HopliteTweaksConfig {
     public int supplyBeamOpacityPercent = 65;
     public boolean teammateMarkers = true;
     public boolean showLastKnownLocations = true;
+    public boolean showDisconnectedLocationBeam = false;
     public boolean showDeathLocations = true;
+    public boolean showDeathLocationBeam = false;
     public int deathMarkerDurationSeconds = 60;
     public boolean showTeammateName = true;
     public boolean duelTeamGlow = true;
@@ -73,6 +74,11 @@ public final class HopliteTweaksConfig {
     public int partyMarkerColor = 0xFF168CFF;
     public int teammateMarkerColor = 0xFF00FF55;
     public int lastKnownMarkerColor = 0xFF808080;
+    public int disconnectedBeamColor = 0xFF808080;
+    public int deathBeamColor = 0xFF808080;
+    public int trackerBeamHeight = 128;
+    public int trackerBeamThicknessPercent = 100;
+    public int trackerBeamOpacityPercent = 65;
     public int markerNameColor = 0xFFFFFFFF;
     public int markerDistanceColor = 0xFFFFFFFF;
     public MarkerShape markerShape = MarkerShape.INVERTED_TRIANGLE;
@@ -87,9 +93,10 @@ public final class HopliteTweaksConfig {
     }
 
     public static void load() {
+        Path path = configPath();
         int loadedVersion = CURRENT_CONFIG_VERSION;
-        if (Files.exists(PATH)) {
-            try (Reader reader = Files.newBufferedReader(PATH)) {
+        if (Files.exists(path)) {
+            try (Reader reader = Files.newBufferedReader(path)) {
                 JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
                 HopliteTweaksConfig loaded = GSON.fromJson(json, HopliteTweaksConfig.class);
                 if (loaded != null) {
@@ -99,7 +106,7 @@ public final class HopliteTweaksConfig {
                         : 0;
                 }
             } catch (Exception exception) {
-                HopliteTweaks.LOGGER.warn("Could not read {}; defaults will be used", PATH, exception);
+                HopliteTweaks.LOGGER.warn("Could not read {}; defaults will be used", path, exception);
             }
         }
         // Carry the original default forward without overwriting custom colors.
@@ -120,15 +127,20 @@ public final class HopliteTweaksConfig {
     }
 
     public static void save() {
+        Path path = configPath();
         instance.clamp();
         try {
-            Files.createDirectories(PATH.getParent());
-            try (Writer writer = Files.newBufferedWriter(PATH)) {
+            Files.createDirectories(path.getParent());
+            try (Writer writer = Files.newBufferedWriter(path)) {
                 GSON.toJson(instance, writer);
             }
         } catch (Exception exception) {
-            HopliteTweaks.LOGGER.warn("Could not save {}", PATH, exception);
+            HopliteTweaks.LOGGER.warn("Could not save {}", path, exception);
         }
+    }
+
+    private static Path configPath() {
+        return FabricLoader.getInstance().getConfigDir().resolve("hoplite-tweaks.json");
     }
 
     public static void reset() {
@@ -183,6 +195,15 @@ public final class HopliteTweaksConfig {
             config.showDeathLocations = true;
             config.deathMarkerDurationSeconds = 60;
         }
+        if (loadedVersion < 13) {
+            config.showDisconnectedLocationBeam = false;
+            config.showDeathLocationBeam = false;
+            config.disconnectedBeamColor = 0xFF808080;
+            config.deathBeamColor = 0xFF808080;
+            config.trackerBeamHeight = 128;
+            config.trackerBeamThicknessPercent = 100;
+            config.trackerBeamOpacityPercent = 65;
+        }
     }
 
     private void clamp() {
@@ -206,6 +227,9 @@ public final class HopliteTweaksConfig {
         markerTextScalePercent = Math.clamp(markerTextScalePercent, 50, 200);
         markerTextViewAngle = Math.clamp(markerTextViewAngle, 0, 90);
         deathMarkerDurationSeconds = Math.clamp(deathMarkerDurationSeconds, 5, 300);
+        trackerBeamHeight = Math.clamp(trackerBeamHeight, 32, 512);
+        trackerBeamThicknessPercent = Math.clamp(trackerBeamThicknessPercent, 25, 500);
+        trackerBeamOpacityPercent = Math.clamp(trackerBeamOpacityPercent, 10, 100);
         if (markerShape == null) {
             markerShape = MarkerShape.INVERTED_TRIANGLE;
         }

@@ -158,4 +158,39 @@ class HopliteTweaksConfigTest {
         assertFalse(config.showDeathLocations);
         assertEquals(90, config.deathMarkerDurationSeconds);
     }
+
+    @Test
+    void preVersionThirteenConfigGetsDisabledGrayTrackerBeamDefaults() {
+        HopliteTweaksConfig config = new HopliteTweaksConfig();
+        config.showDisconnectedLocationBeam = true;
+        config.showDeathLocationBeam = true;
+        config.disconnectedBeamColor = 0xFF123456;
+        config.deathBeamColor = 0xFF654321;
+
+        HopliteTweaksConfig.migrate(config, 12);
+
+        assertFalse(config.showDisconnectedLocationBeam);
+        assertFalse(config.showDeathLocationBeam);
+        assertEquals(0xFF808080, config.disconnectedBeamColor);
+        assertEquals(0xFF808080, config.deathBeamColor);
+        assertEquals(128, config.trackerBeamHeight);
+        assertEquals(100, config.trackerBeamThicknessPercent);
+        assertEquals(65, config.trackerBeamOpacityPercent);
+    }
+
+    @Test
+    void currentConfigPreservesTrackerBeamPreferences() {
+        HopliteTweaksConfig config = new HopliteTweaksConfig();
+        config.showDisconnectedLocationBeam = true;
+        config.showDeathLocationBeam = true;
+        config.disconnectedBeamColor = 0xFF123456;
+        config.deathBeamColor = 0xFF654321;
+
+        HopliteTweaksConfig.migrate(config, 13);
+
+        assertTrue(config.showDisconnectedLocationBeam);
+        assertTrue(config.showDeathLocationBeam);
+        assertEquals(0xFF123456, config.disconnectedBeamColor);
+        assertEquals(0xFF654321, config.deathBeamColor);
+    }
 }

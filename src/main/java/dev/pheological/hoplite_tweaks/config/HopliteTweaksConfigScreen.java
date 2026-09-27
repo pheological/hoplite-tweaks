@@ -215,6 +215,13 @@ public final class HopliteTweaksConfigScreen {
                 .option(color("Disconnected marker color", "Color used for disconnected teammate markers.",
                     defaults.lastKnownMarkerColor, () -> config.lastKnownMarkerColor,
                     value -> config.lastKnownMarkerColor = value))
+                .option(toggle("Show disconnected beam",
+                    "Draws a vertical beam at a disconnected teammate's last location.",
+                    defaults.showDisconnectedLocationBeam, () -> config.showDisconnectedLocationBeam,
+                    value -> config.showDisconnectedLocationBeam = value))
+                .option(color("Disconnected beam color", "Color used for disconnected teammate beams.",
+                    defaults.disconnectedBeamColor, () -> config.disconnectedBeamColor,
+                    value -> config.disconnectedBeamColor = value))
                 .build())
             .group(OptionGroup.createBuilder()
                 .name(text("Corpse/Death Tracker"))
@@ -222,9 +229,28 @@ public final class HopliteTweaksConfigScreen {
                 .option(toggle("Show death locations", "Draws a fading skull where a teammate died.",
                     defaults.showDeathLocations, () -> config.showDeathLocations,
                     value -> config.showDeathLocations = value))
+                .option(toggle("Show death beam", "Draws a fading vertical beam where a teammate died.",
+                    defaults.showDeathLocationBeam, () -> config.showDeathLocationBeam,
+                    value -> config.showDeathLocationBeam = value))
+                .option(color("Death beam color", "Color used for teammate death beams.",
+                    defaults.deathBeamColor, () -> config.deathBeamColor,
+                    value -> config.deathBeamColor = value))
                 .option(slider("Fade duration", "Seconds before a death marker fully fades away.",
                     defaults.deathMarkerDurationSeconds, () -> config.deathMarkerDurationSeconds,
                     value -> config.deathMarkerDurationSeconds = value, 5, 300, 5))
+                .build())
+            .group(OptionGroup.createBuilder()
+                .name(text("Corpse/death beams"))
+                .description(description("Shared appearance controls for disconnected and death-location beams."))
+                .option(slider("Beam height", "Height of corpse and death beams in blocks.",
+                    defaults.trackerBeamHeight, () -> config.trackerBeamHeight,
+                    value -> config.trackerBeamHeight = value, 32, 512, 16))
+                .option(slider("Beam thickness", "Width of corpse and death beams.",
+                    defaults.trackerBeamThicknessPercent, () -> config.trackerBeamThicknessPercent,
+                    value -> config.trackerBeamThicknessPercent = value, 25, 500, 25))
+                .option(slider("Beam opacity", "Opacity of corpse and death beams.",
+                    defaults.trackerBeamOpacityPercent, () -> config.trackerBeamOpacityPercent,
+                    value -> config.trackerBeamOpacityPercent = value, 10, 100, 5))
                 .build())
             .group(OptionGroup.createBuilder()
                 .name(text("Name and distance"))

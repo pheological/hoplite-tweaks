@@ -86,6 +86,16 @@ class TeammateMarkerRendererTest {
         assertEquals(0x00FFFFFF, TeammateMarkerRenderer.fadedTextureColor(60_000, 60_000));
     }
 
+    @Test
+    void trackerBeamUsesConfiguredColorOpacityAndDeathFade() {
+        assertEquals(0xA6808080,
+            TeammateMarkerRenderer.trackerBeamColor(0xFF808080, 65, 1.0D));
+        assertEquals(0x53808080,
+            TeammateMarkerRenderer.trackerBeamColor(0xFF808080, 65, 0.5D));
+        assertEquals(0x00808080,
+            TeammateMarkerRenderer.trackerBeamColor(0xFF808080, 65, 0.0D));
+    }
+
     private Vec3 directionAtDegrees(double degrees) {
         double radians = Math.toRadians(degrees);
         return new Vec3(Math.sin(radians), 0.0D, Math.cos(radians));

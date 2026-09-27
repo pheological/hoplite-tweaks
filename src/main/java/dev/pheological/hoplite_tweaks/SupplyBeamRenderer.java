@@ -164,8 +164,8 @@ final class SupplyBeamRenderer {
     private static final float[] ROWS = {0, 0.01F, 0.05F, 0.75F, 0.9F, 1};
     private static final float[] FADE = {0, 0.8F, 1, 1, 0.6F, 0};
 
-    private static void geometry(PoseStack.Pose pose, VertexConsumer out, Vec3 right,
-                                 double bottomWidth, double topWidth, float height, int color) {
+    static void geometry(PoseStack.Pose pose, VertexConsumer out, Vec3 right,
+                         double bottomWidth, double topWidth, float height, int color) {
         for (int row = 0; row < ROWS.length - 1; row++) {
             for (int band = 0; band < BANDS.length - 1; band++) {
                 vertex(pose, out, right, bottomWidth, topWidth, height, row, band, color);

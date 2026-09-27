@@ -4,6 +4,11 @@
 
 # Changelog
 
+## 1.2.4
+
+- Added configurable beams for corpse and death locations.
+- Updated the mod icon.
+
 ## 1.2.3
 
 - Fixed the corpse/death tracker.

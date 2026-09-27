@@ -25,6 +25,7 @@ import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.ReadOnlyScoreInfo;
 import net.minecraft.world.scores.ScoreHolder;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.Comparator;
 import java.util.Locale;
@@ -46,6 +47,8 @@ public final class TeammateMarkerRenderer {
         Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "textures/gui/teammate_marker.png");
     private static final Identifier SKULL_TEXTURE =
         Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "textures/gui/skull.png");
+    private static final Identifier BEAM_TEXTURE =
+        Identifier.fromNamespaceAndPath(HopliteTweaks.MOD_ID, "textures/gui/supply_beam.png");
     private static final Identifier SOLID_TEXTURE =
         Identifier.fromNamespaceAndPath("minecraft", "textures/block/white_concrete.png");
     private static final int FULL_BRIGHT = 0x00F000F0;
@@ -222,6 +225,21 @@ public final class TeammateMarkerRenderer {
                 config.teammateMarkerColor
             );
 
+        boolean showBeam = marker.death
+            ? config.showDeathLocationBeam
+            : marker.lastKnown && config.showDisconnectedLocationBeam;
+        if (showBeam) {
+            int beamColor = marker.death ? config.deathBeamColor : config.disconnectedBeamColor;
+            double fade = marker.death
+                ? fadeRemaining(System.currentTimeMillis() - marker.diedAt,
+                    config.deathMarkerDurationSeconds * 1_000L)
+                : 1.0D;
+            drawLocationBeam(
+                context, matrices, cameraRotation, cameraPosition, marker.position,
+                trackerBeamColor(beamColor, config.trackerBeamOpacityPercent, fade), config
+            );
+        }
+
         matrices.pushPose();
         matrices.translate(relative.x, relative.y + height, relative.z);
 
@@ -287,6 +305,58 @@ public final class TeammateMarkerRenderer {
             }
             matrices.popPose();
         }
+        matrices.popPose();
+    }
+
+    //? >=26 {
+    /*private static void drawLocationBeam(
+        LevelRenderContext context,
+    *///?} else {
+    private static void drawLocationBeam(
+        WorldRenderContext context,
+    //?}
+        PoseStack matrices,
+        Quaternionf cameraRotation,
+        Vec3 cameraPosition,
+        Vec3 position,
+        int color,
+        HopliteTweaksConfig config
+    ) {
+        Minecraft client = Minecraft.getInstance();
+        Vector3f rightVector = cameraRotation.transform(new Vector3f(1, 0, 0));
+        Vector3f forwardVector = cameraRotation.transform(new Vector3f(0, 0, -1));
+        Vec3 right = new Vec3(rightVector.x, rightVector.y, rightVector.z);
+        Vec3 forward = new Vec3(forwardVector.x, forwardVector.y, forwardVector.z).normalize();
+        Vec3 relative = position.subtract(cameraPosition);
+        double height = config.trackerBeamHeight;
+        double limit = Math.max(16.0D,
+            Math.min(64.0D, client.options.getEffectiveRenderDistance() * 8.0D));
+        double bottomDepth = relative.dot(forward);
+        double topDepth = bottomDepth + height * forward.y;
+        double widthRatio = SupplyBeamStyle.widthAtDepth(1, config.trackerBeamThicknessPercent);
+        double bottomWidth = bottomDepth * widthRatio;
+        double topWidth = topDepth * widthRatio;
+        double width = Math.max(0.0D, Math.max(bottomWidth, topWidth));
+        double projectionScale = SupplyBeamState.projectionScale(
+            relative.x, relative.y, relative.z, height, width, limit);
+
+        matrices.pushPose();
+        matrices.translate(
+            relative.x * projectionScale,
+            relative.y * projectionScale,
+            relative.z * projectionScale
+        );
+        matrices.scale((float) projectionScale, (float) projectionScale, (float) projectionScale);
+        //? >=26 {
+        /*context.submitNodeCollector().submitCustomGeometry(
+        *///?} else {
+        context.commandQueue().submitCustomGeometry(
+        //?}
+            matrices,
+            RenderTypes.textSeeThrough(BEAM_TEXTURE),
+            (pose, vertices) -> SupplyBeamRenderer.geometry(
+                pose, vertices, right, bottomWidth, topWidth, (float) height, color)
+        );
         matrices.popPose();
     }
 
@@ -536,16 +606,27 @@ public final class TeammateMarkerRenderer {
     }
 
     static int fadedDeathColor(long elapsedMillis, long durationMillis) {
-        if (durationMillis <= 0L) {
-            return DEATH_COLOR & 0x00FFFFFF;
-        }
-        double remaining = 1.0D - Math.clamp((double) elapsedMillis / durationMillis, 0.0D, 1.0D);
+        double remaining = fadeRemaining(elapsedMillis, durationMillis);
         int alpha = (int) Math.round(255.0D * remaining);
         return alpha << 24 | DEATH_COLOR & 0x00FFFFFF;
     }
 
     static int fadedTextureColor(long elapsedMillis, long durationMillis) {
         return fadedDeathColor(elapsedMillis, durationMillis) & 0xFF000000 | 0x00FFFFFF;
+    }
+
+    static int trackerBeamColor(int color, int opacityPercent, double fade) {
+        int alpha = (int) Math.round(255.0D
+            * Math.clamp(opacityPercent, 0, 100) / 100.0D
+            * Math.clamp(fade, 0.0D, 1.0D));
+        return alpha << 24 | color & 0x00FFFFFF;
+    }
+
+    private static double fadeRemaining(long elapsedMillis, long durationMillis) {
+        if (durationMillis <= 0L) {
+            return 0.0D;
+        }
+        return 1.0D - Math.clamp((double) elapsedMillis / durationMillis, 0.0D, 1.0D);
     }
 
     static boolean withinViewAngle(Vec3 viewDirection, Vec3 targetDirection, int angleDegrees) {
