@@ -38,8 +38,13 @@ class TeammateMarkerRendererTest {
 
     @Test
     void kingUsesYellowRoleColor() {
-        assertEquals(KING, color("King pheological", 0xFFFFFFFF));
-        assertEquals(KING, color("Teammate", 0xFFFFC43D));
+        assertEquals(KING, color("Teammate", 0xFFFFFFFF, true));
+    }
+
+    @Test
+    void kingNamesAndGoldApolloColorsDoNotCreateExtraKings() {
+        assertEquals(TEAMMATE, color("Viking", 0xFFFFFFFF));
+        assertEquals(TEAMMATE, color("King pheological", 0xFFFFC43D));
     }
 
     @Test
@@ -125,6 +130,10 @@ class TeammateMarkerRendererTest {
     }
 
     private int color(String name, int serverColor) {
+        return color(name, serverColor, false);
+    }
+
+    private int color(String name, int serverColor, boolean king) {
         ApolloModels.Teammate teammate = new ApolloModels.Teammate(
             UUID.randomUUID(),
             0.0D,
@@ -135,6 +144,6 @@ class TeammateMarkerRendererTest {
             serverColor,
             System.currentTimeMillis()
         );
-        return TeammateRole.colorFor(teammate, KING, PARTY, TEAMMATE);
+        return TeammateRole.colorFor(teammate, king, KING, PARTY, TEAMMATE);
     }
 }

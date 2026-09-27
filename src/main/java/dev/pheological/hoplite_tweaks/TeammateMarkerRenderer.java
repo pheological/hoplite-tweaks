@@ -19,6 +19,11 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+//? >=26.2 {
+/*import net.minecraft.world.scores.TeamColor;
+*///?} else {
+import net.minecraft.ChatFormatting;
+//?}
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
@@ -101,6 +106,11 @@ public final class TeammateMarkerRenderer {
         //?}
         float tickDelta = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
+        long now = System.currentTimeMillis();
+        client.level.players().stream()
+            .filter(player -> player.isAlive() && player.getHealth() > 0.0F)
+            .forEach(player -> ApolloState.reviveIfAlive(player.getUUID(), now));
+
         String dimension = client.level.dimension().identifier().getPath();
         Stream<Marker> liveMarkers = config.teammateMarkers
             ? ApolloState.teammates().stream()
@@ -116,7 +126,6 @@ public final class TeammateMarkerRenderer {
                 .filter(entry -> sameDimension(entry.teammate().world(), dimension))
                 .map(entry -> lastKnownMarker(entry, cameraPosition))
             : Stream.empty();
-        long now = System.currentTimeMillis();
         long deathDurationMillis = config.deathMarkerDurationSeconds * 1_000L;
         Stream<Marker> deathMarkers = config.showDeathLocations
             ? ApolloState.deathLocations().stream()
@@ -222,6 +231,7 @@ public final class TeammateMarkerRenderer {
                 config.deathMarkerDurationSeconds * 1_000L)
             : marker.lastKnown ? config.lastKnownMarkerColor : TeammateRole.colorFor(
                 marker.teammate,
+                isYellowScoreboardTeam(Minecraft.getInstance(), marker.teammate.playerId()),
                 config.kingMarkerColor,
                 config.partyMarkerColor,
                 config.teammateMarkerColor
@@ -657,6 +667,25 @@ public final class TeammateMarkerRenderer {
 
     static boolean shouldRevealDistance(boolean lookingAtMarker, boolean alwaysShowDistance) {
         return lookingAtMarker || alwaysShowDistance;
+    }
+
+    private static boolean isYellowScoreboardTeam(Minecraft client, java.util.UUID playerId) {
+        if (client.level == null || client.getConnection() == null) {
+            return false;
+        }
+        PlayerInfo info = client.getConnection().getPlayerInfo(playerId);
+        if (info == null) {
+            return false;
+        }
+        var team = client.level.getScoreboard().getPlayersTeam(info.getProfile().name());
+        if (team == null) {
+            return false;
+        }
+        //? >=26.2 {
+        /*return team.getColor().orElse(null) == TeamColor.YELLOW;
+        *///?} else {
+        return team.getColor() == ChatFormatting.YELLOW;
+        //?}
     }
 
     private static float parseHealth(String value) {

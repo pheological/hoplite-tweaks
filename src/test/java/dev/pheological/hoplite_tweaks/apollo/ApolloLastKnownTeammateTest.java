@@ -130,6 +130,18 @@ class ApolloLastKnownTeammateTest {
     }
 
     @Test
+    void livePlayerObservationClearsDeathWhenApolloNeverRemovedThem() {
+        ApolloState.replaceTeammatesAuthoritative(List.of(sample("minecraft:overworld", 10.0, 1_000L)));
+        assertTrue(ApolloState.markDeath(PLAYER, 5_000L));
+        ApolloState.replaceTeammatesAuthoritative(List.of(sample("minecraft:overworld", 20.0, 6_000L)));
+
+        assertFalse(ApolloState.reviveIfAlive(PLAYER, 5_999L));
+        assertFalse(ApolloState.deathLocations().isEmpty());
+        assertTrue(ApolloState.reviveIfAlive(PLAYER, 6_000L));
+        assertTrue(ApolloState.deathLocations().isEmpty());
+    }
+
+    @Test
     void clearingTheSessionRemovesActiveAndArchivedEntries() {
         ApolloState.replaceTeammatesAuthoritative(List.of(sample("minecraft:overworld", 1.0, 1_000L)));
         ApolloState.replaceTeammatesAuthoritative(List.of());

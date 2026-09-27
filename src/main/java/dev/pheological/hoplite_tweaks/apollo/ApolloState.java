@@ -152,6 +152,16 @@ public final class ApolloState {
         return true;
     }
 
+    public static boolean reviveIfAlive(UUID playerId, long observedAt) {
+        ApolloModels.DeathLocation death = DEATH_LOCATIONS.get(playerId);
+        if (death == null || observedAt - death.diedAt() < 1_000L) {
+            return false;
+        }
+        DEATH_LOCATIONS.remove(playerId, death);
+        EXPIRED_CORPSES.remove(playerId);
+        return true;
+    }
+
     public static void clearTeammates() {
         TEAMMATES.clear();
         LAST_KNOWN.clear();
