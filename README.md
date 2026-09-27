@@ -1,120 +1,46 @@
 # Hoplite Tweaks
 
-Hoplite Tweaks is a mod that adds QOL modifications to the minecraft server Hoplite.
+An all-in-one Hoplite mod that adds all the QOL and utility features you need for Hoplite. Includes Team View, Cooldown Viewing, Kill Tracker, Supply Beams, and much more. Supports versions 1.21.11–26.2.
 
-## Included features
+**Use the P key to open the GUI.**
 
-- Hoplite teammate support
-  - Receives Hoplite's authoritative `hoplite-addons:update_teammates` and reset packets.
-  - Renders a camera-facing chevron above each teammate in the world.
-  - Displays live distance beneath the teammate name. Health display is temporarily disabled
-    pending server-admin review, with its implementation retained for easy restoration.
-  - Uses live player positions nearby and exact server-provided positions at distance.
-  - Can hide nearby marker shapes and distance while retaining health.
-  - Uses Hoplite role colors: kings are yellow, party members are blue, and
-    regular teammates are green.
-  - Supports marker scale, height, visibility range, name, and distance controls.
-- Duel teammate glow
-  - Outlines teammates in duel/competitive modes.
-  - Prefers Hoplite packet team membership and falls back to the vanilla scoreboard team.
-- Cooldown HUD
-  - Receives Apollo display, remove, and reset cooldown messages.
-  - Shows compact cards with readable timers and color-changing progress bars.
-  - Can show purely visual vanilla-style cooldown sweeps on matching hotbar items.
-  - Can render optional client-side top bars using matching hotbar item models.
-- Mod Menu configuration
-  - Separate General, Team View, Cooldowns, and Supply Beams tabs.
-  - Feature toggles, sliders, role-color information, and reset-per-tab.
-  - Cooldown HUD position, scale, and compact-mode controls.
-  - Persists to `config/hoplite-tweaks.json`.
-- Hoplite utilities
-  - Session kill tracking in tab, scoreboard, and configurable player nametags.
-  - Customizable multiplayer ping labels beside or above player nametags on every server.
-  - Party-message and mention pings.
-  - Automatic party-chat switching after joining a party.
-  - Weekly crate reminders and automatic pet selection.
-  - Optional automatic activation of Hoplite's clickable skin-application prompt.
-  - Optional double-tap protection against accidentally dropping a hotbar sword.
-  - Separate double-tap protection for recognized named legendary items.
-  - Outgoing anti-slur protection backed by an automatically updated HTTPS text list and offline cache.
-  - Optional three-second chat queue for unranked players, detected from gray sender names in chat.
-  - Per-player chat-name colors and bold styling backed by an automatically updated player list.
+## Main Features
 
-### Supply crate beams
+### Team View
 
-Supply Beams marks each Hoplite supply-drop announcement with a customizable beam, including
-locations outside loaded terrain. Beams use the announced X/Z coordinates and start at Y=64 until the
-destination chunk first loads. They then remember the actual surface height even when the chunk
-unloads, updating it if the terrain loads again. Beams have a bright core and soft outer glow, with
-a consistent apparent width at any distance. Color, screen width, height, and opacity are adjustable.
-Looking within 10 degrees of a beam shows its horizontal distance near the beam's base; this is enabled by default
-and can be disabled with **Show beam distance** in the Supply Beams settings.
-Each beam expires after five minutes or clears permanently when you come within 25 horizontal
-blocks by default. Set the arrival radius to zero to disable arrival clearing.
+This setting allows you to see all teammates regardless of distance in Civilization or any team-based game modes.
 
-Assign **Toggle Supply Crate Beams** under **Controls → Key Binds → Hoplite Tweaks**; it is
-unassigned by default. Hiding beams does not stop tracking or expiration. The Supply Beams tab
-also provides a Controls shortcut, a button to clear tracked drops, and a test button that spawns
-a beam 100 blocks in the direction you are looking for 20 seconds.
+### Cooldown Viewer
 
-### Network disclosure
+This setting shows cooldowns for all legendary items. Typically, the action bar only allows you to see the cooldown of one item at a time, but this setting allows you to see all of them.
 
-The anti-slur module makes a read-only HTTPS GET request to the
-[`blocked-words.txt`](./blocked-words.txt) file in this repository when the mod starts and when
-the player joins a server. This request only downloads moderation rules. Hoplite Tweaks does not
-upload chat messages, player identifiers, server information, telemetry, or other user data.
-Rules normally match substrings; prefix a rule with `?` to match only a standalone word or phrase,
-and prefix it with `!` to define an allowed exception.
+### Supply Beams
 
-The chat-name highlighter similarly downloads [`highlighted-players.txt`](./highlighted-players.txt).
-Both files are bundled into releases as immediate offline fallbacks and refreshed from this
-repository without uploading any player or chat data.
+This setting adds easily spotted supply beams where loot drops are announced in chat. After visiting the supply drop, the marker disappears.
 
-Each highlighted player line uses
-`USERNAME #CHAT_HEX chat_weight #NAMETAG_HEX nametag_weight`. Each weight is either `bold` or
-`normal`. Chat styling only applies to a configured sender name followed by a colon, so ordinary
-mentions are left unchanged.
+### Kill Tracker
 
-The feature implementation is original. The project contains a small,
-dependency-free protobuf wire reader for Apollo cooldown compatibility and an
-independent codec for Hoplite's teammate payload schema; it does not bundle
-Teamviewer or Coolite's implementation.
+This setting allows you to show kills in the tab list and/or player nametags. It can be configured to show only kills after the mining phase or total kills.
 
-## Supported versions
+## Additional Features
 
-The source is shared through Stonecutter and currently produces Fabric builds
-for:
+- **Anti Slur**: Prevents you from using slurs, which helps stop you from being muted automatically.
+- **Team Glow**: Adds a glowing effect to teammates in competitive duels.
+- **Mention Ping**: Plays a ping sound when your name is mentioned or someone sends a message in party chat.
+- **Auto Party Chat**: Automatically puts you in party chat after joining a party.
+- **Auto Pet**: Automatically pets the dragon during dragon scatter games.
+- **Auto Apply Skins**: Automatically applies weapon skins after you obtain a legendary item.
+- **Double Tap to Drop Sword**: Press the drop key twice to drop your weapon.
+- **Double Tap to Drop Legendary**: Requires two presses of the drop key to drop legendary items.
+- **Ping Header**: Shows ping in or above player nametags.
+- **No Lava Fog**: Allows you to see under lava.
 
-- Minecraft 1.21.11
-- Minecraft 26.1.2 (metadata also marks 26.1 and 26.1.1)
-- Minecraft 26.2
-- Minecraft 26.3
+## Dependencies
 
-Java 21 is required for 1.21.11. Java 25 or newer is required for 26.x.
+This mod requires both [YACL](https://modrinth.com/mod/yacl) and [Mod Menu](https://modrinth.com/mod/modmenu) to run. You probably already have these installed if you have installed other mods before.
 
-## Build
+**Officially approved but not affiliated with Hoplite.**
 
-```bash
-./gradlew build
-```
+**Wonder why the icon changed? Due to copyright restrictions, I am unable to use the Hoplite logo.**
 
-Per-version jars are written to each version project's `build/libs` directory.
-To collect distributable jars under the root `build/libs` directory:
-
-```bash
-./gradlew buildAndCollect
-```
-
-## Architecture
-
-- `HopliteSession` is the mandatory server-address gate.
-- `apollo/` owns cooldown decoding and shared short-lived marker state.
-- `TeammateMarkerRenderer` renders billboarded world-space teammate markers.
-- `HopliteHud` renders cooldown data.
-- `DuelGlow` contains duel detection and team decisions.
-- Highlighted world nametags are restricted to active Hoplite connections.
-- `config/` owns persistence and the Mod Menu screen.
-- Stonecutter comments isolate API differences introduced in Minecraft 26.x.
-
-New Hoplite features should check `HopliteSession.isActive()` before reading or
-mutating gameplay state.
+Looking for the download? [Download Hoplite Tweaks on Modrinth](https://modrinth.com/mod/hoplite-tweaks).
