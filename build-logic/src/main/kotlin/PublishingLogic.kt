@@ -64,7 +64,6 @@ fun Project.configureModPublishing(ctx: Context) {
 	extensions.configure<ModPublishExtension>("publishMods") {
 		val mrStaging = envTrue("PUB_MODRINTH_STAGING")
 		val modrinthAccessToken = env("PUB_MODRINTH_TOKEN")
-		val curseforgeAccessToken = env("PUB_CURSEFORGE_TOKEN")
 
 		if (envTrue("PUB_DRY_RUN") || !envTrue("PUB_MODS_ENABLE")) {
 			dryRun = true
@@ -77,15 +76,11 @@ fun Project.configureModPublishing(ctx: Context) {
 		changelog.set(rootProject.file("CHANGELOG.md").readText())
 		modLoaders.add(ctx.loader.id)
 
-		displayName =
-			"${ctx.modName} ${ctx.basicVersion} ${ctx.loader.id.replaceFirstChar(Char::titlecase)} ${ctx.currentMcVersion}"
+		displayName = "${ctx.modId}-${ctx.fullVersion}"
 
 		val deps = ctx.extension.dependencies
 
 		modrinth(ctx, ctx.publishAdditionalVersions, mrStaging, modrinthAccessToken, deps)
-		if (!mrStaging && !env("PUB_CURSEFORGE_PROJECT_ID").isNullOrBlank() && !curseforgeAccessToken.isNullOrBlank()) {
-			curseforge(ctx, ctx.publishAdditionalVersions, curseforgeAccessToken, deps)
-		}
 	}
 }
 
@@ -105,20 +100,6 @@ private fun ModPublishExtension.modrinth(
 		deps.incompatible.forEach { dep -> whenNotNull(dep.modrinth) { incompatible(it) } }
 		deps.embeds.forEach { dep -> whenNotNull(dep.modrinth) { embeds(it) } }
 	}
-}
-
-private fun ModPublishExtension.curseforge(
-	ctx: Context, additionalVersions: List<String>, accessToken: String?, deps: DependenciesConfig
-) = curseforge {
-	projectId = project.env("PUB_CURSEFORGE_PROJECT_ID")
-
-	this.accessToken = accessToken
-	minecraftVersions.addAll(listOf(ctx.currentMcVersion) + additionalVersions)
-
-	deps.required.forEach { dep -> whenNotNull(dep.curseforge) { requires(it) } }
-	deps.optional.forEach { dep -> whenNotNull(dep.curseforge) { optional(it) } }
-	deps.incompatible.forEach { dep -> whenNotNull(dep.curseforge) { incompatible(it) } }
-	deps.embeds.forEach { dep -> whenNotNull(dep.curseforge) { embeds(it) } }
 }
 
 private fun whenNotNull(stringProp: Property<String>, action: (String) -> Unit) {

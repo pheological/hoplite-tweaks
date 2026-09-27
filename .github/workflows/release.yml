@@ -1,5 +1,9 @@
 name: release
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   push:
     tags:
@@ -162,9 +166,7 @@ jobs:
       PUB_MAVEN_CENTRAL_SNAPSHOTS: ${{ vars.PUB_MAVEN_CENTRAL_SNAPSHOTS }}
       PUB_MODRINTH_STAGING: ${{ vars.PUB_MODRINTH_STAGING }}
       PUB_MODRINTH_PROJECT_ID: ${{ vars.PUB_MODRINTH_PROJECT_ID }}
-      PUB_CURSEFORGE_PROJECT_ID: ${{ vars.PUB_CURSEFORGE_PROJECT_ID }}
       PUB_MODRINTH_TOKEN: ${{ secrets.PUB_MODRINTH_TOKEN }}
-      PUB_CURSEFORGE_TOKEN: ${{ secrets.PUB_CURSEFORGE_TOKEN }}
       PUB_SIGNING_KEY: ${{ secrets.PUB_SIGNING_KEY }}
       PUB_SIGNING_ID: ${{ secrets.PUB_SIGNING_ID }}
       PUB_SIGNING_PASSWORD: ${{ secrets.PUB_SIGNING_PASSWORD }}
