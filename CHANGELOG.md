@@ -4,6 +4,11 @@
 
 # Changelog
 
+## 1.2.7
+
+- Fixed the Modrinth release job to use Java 25 for Minecraft 26.1 and 26.2 builds.
+- Made platform publishing failures fail the release workflow instead of being reported as successful.
+
 ## 1.2.6
 
 - Fixed clean-environment release builds by resolving Quilt parser dependencies from Quilt's Maven repository.
