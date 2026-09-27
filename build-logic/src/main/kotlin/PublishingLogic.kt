@@ -71,10 +71,7 @@ fun Project.configureModPublishing(ctx: Context) {
 		}
 
 		val jarTask = tasks.named(ctx.extension.jarTask.get()).map { it as Jar }
-		val srcJarTask = tasks.named(ctx.extension.sourcesJarTask.get()).map { it as Jar }
-
 		file.set(jarTask.flatMap(Jar::getArchiveFile))
-		additionalFiles.from(srcJarTask.flatMap(Jar::getArchiveFile))
 		type = releaseType
 		version = ctx.fullVersion
 		changelog.set(rootProject.file("CHANGELOG.md").readText())

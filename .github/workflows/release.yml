@@ -212,4 +212,5 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Publish to Platforms
-        run: ./gradlew publishMods --stacktrace
+        # Minecraft 26.3 requires separate, explicit owner approval.
+        run: ./gradlew publish1.21.11 publish26.1.2 publish26.2 --stacktrace

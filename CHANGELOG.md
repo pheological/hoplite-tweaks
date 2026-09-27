@@ -4,6 +4,16 @@
 
 # Changelog
 
+## 1.2.5
+
+- Added keybinds for toggling Team View and opening its settings.
+- Added an option to keep teammate distances visible while names reveal on look.
+- Matched Team View defaults to the OneClient 26.2 profile.
+- Thickened the chevron texture and aligned every marker shape with its labels.
+- Kept corpse and death tracking active when live teammate markers are toggled off.
+- Identified kings from Hoplite's yellow scoreboard team instead of name and color guesses.
+- Fixed teammate names and marker icons after pre-mining-phase deaths and respawns.
+
 ## 1.2.4
 
 - Added configurable beams for corpse and death locations.
