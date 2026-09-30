@@ -19,6 +19,7 @@ public final class HopliteTweaksConfig {
 
     public int configVersion = CURRENT_CONFIG_VERSION;
     public boolean enabled = true;
+    public boolean autoViewBobbing = false;
     public boolean noLavaFog = true;
     public boolean killCounter = true;
     public boolean trackKillsAfterMiningPhase = false;

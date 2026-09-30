@@ -8,6 +8,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HopliteTweaksConfigTest {
     @Test
+    void autoViewBobbingDefaultsOffAndRoundTrips() {
+        HopliteTweaksConfig config = new HopliteTweaksConfig();
+        assertFalse(config.autoViewBobbing);
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        assertFalse(gson.fromJson("{}", HopliteTweaksConfig.class).autoViewBobbing);
+        config.autoViewBobbing = true;
+        assertTrue(gson.fromJson(gson.toJson(config), HopliteTweaksConfig.class).autoViewBobbing);
+    }
+
+    @Test
     void teamViewDefaultsMatchOneClientTwentySixPointTwoProfile() {
         HopliteTweaksConfig config = new HopliteTweaksConfig();
 

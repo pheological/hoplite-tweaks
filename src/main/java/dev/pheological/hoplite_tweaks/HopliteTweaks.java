@@ -23,6 +23,7 @@ public final class HopliteTweaks {
         HopliteTweaksConfig.load();
         ConfigKeybind.initialize();
         TeamTrackerKeybind.initialize();
+        QuakeProKeybind.initialize();
 
         //? >=26 {
         /*PayloadTypeRegistry.clientboundPlay().register(ApolloPayload.TYPE, ApolloPayload.CODEC);

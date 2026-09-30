@@ -371,6 +371,22 @@ public final class HopliteTweaksConfigScreen {
                 .build())
             .group(OptionGroup.createBuilder()
                 .name(text("Visuals"))
+                .option(toggle("Auto View Bobbing",
+                    "Enable view bobbing when Toggle Quake Pro is active, then restore its original setting. Changes apply on the next activation.",
+                    defaults.autoViewBobbing, () -> config.autoViewBobbing, value -> config.autoViewBobbing = value))
+                .option(ButtonOption.createBuilder()
+                    .name(text("Toggle Quake Pro keybind"))
+                    .text(text("Open Controls"))
+                    .description(description("Assign Toggle Quake Pro under Hoplite Tweaks. On Hoplite, it switches to vanilla's maximum FOV and back to your original FOV."))
+                    .action(screen -> {
+                        Minecraft client = Minecraft.getInstance();
+                        //? >=26.2 {
+                        /*client.gui.setScreen(new KeyBindsScreen(screen, client.options));
+                        *///?} else {
+                        client.setScreen(new KeyBindsScreen(screen, client.options));
+                        //?}
+                    })
+                    .build())
                 .option(toggle("No lava fog",
                     "Removes the dense fog while your camera is submerged in lava.",
                     defaults.noLavaFog, () -> config.noLavaFog, value -> config.noLavaFog = value))
