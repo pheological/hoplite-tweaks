@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 import java.util.Locale;
 
 public final class DuelGlow {
-    private static final Pattern LOBBY_ID = Pattern.compile("(?i)(?<![a-z0-9_])d(?:10|[1-9])(?![a-z0-9_])");
+    private static final Pattern DUEL_ID = Pattern.compile("(?i)(?<![a-z0-9_])d[0-9]*(?![a-z0-9_])");
 
     private DuelGlow() {
     }
@@ -67,13 +67,17 @@ public final class DuelGlow {
             .map(entry -> PlayerTeam.formatNameForTeam(
                 board.getPlayersTeam(entry.owner()), entry.ownerName()).getString())
             .toList();
-        return isDuelMatch(sidebar.getDisplayName().getString(), lines);
+        return isDuelMatch(lines);
     }
 
-    static boolean isDuelMatch(String title, List<String> lines) {
-        String normalized = title.toLowerCase(Locale.ROOT);
-        if (!normalized.contains("duel") && !normalized.contains("comp")) return false;
-        return lines.stream().noneMatch(line -> LOBBY_ID.matcher(
-            line.replaceAll("(?i)§[0-9a-fk-orx]", "")).find());
+    static boolean isDuelMatch(List<String> lines) {
+        boolean duelId = false;
+        boolean timeLeft = false;
+        for (String line : lines) {
+            String plain = line.replaceAll("(?i)§[0-9a-fk-orx]", "");
+            duelId |= DUEL_ID.matcher(plain).find();
+            timeLeft |= plain.toLowerCase(Locale.ROOT).contains("time left:");
+        }
+        return duelId && timeLeft;
     }
 }

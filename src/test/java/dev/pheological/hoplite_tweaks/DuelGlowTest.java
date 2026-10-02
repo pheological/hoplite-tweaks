@@ -6,30 +6,35 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DuelGlowTest {
     @Test
-    void excludesAllTenDuelsLobbies() {
-        for (int lobby = 1; lobby <= 10; lobby++) {
-            assertFalse(DuelGlow.isDuelMatch("DUELS - NA",
-                List.of("09/30/26 00:04 NA D" + lobby, "Division: MASTER", "Total Wins: 4,112")));
-            assertFalse(DuelGlow.isDuelMatch("COMPETITIVE", List.of("NA d" + lobby)));
+    void lobbyIdentifiersNeedMatchTimer() {
+        for (int id = 1; id <= 10; id++) {
+            String marker = "09/30/26 00:04 NA D" + id;
+            assertFalse(DuelGlow.isDuelMatch(List.of(marker, "Division: MASTER", "Total Wins: 4,112")));
+            assertTrue(DuelGlow.isDuelMatch(List.of(marker, "Time Left: 00:30")));
         }
     }
 
     @Test
-    void excludesFormattedLobbyIdentifiers() {
-        assertFalse(DuelGlow.isDuelMatch("DUELS - NA", List.of("§709/30/26 NA §8D§71§r")));
+    void requiresBothDuelMarkerAndTimeLeft() {
+        assertFalse(DuelGlow.isDuelMatch(List.of("NA D1", "Time: 00:30")));
+        assertFalse(DuelGlow.isDuelMatch(List.of("NA BR1", "Time Left: 00:30")));
+        assertFalse(DuelGlow.isDuelMatch(List.of("Opponent: Player")));
+        assertFalse(DuelGlow.isDuelMatch(List.of()));
+        assertTrue(DuelGlow.isDuelMatch(List.of("NA D", "Time Left: 00:30")));
+        assertTrue(DuelGlow.isDuelMatch(List.of("NA D11", "Time Left: 00:30")));
     }
 
     @Test
-    void retainsGlowInMatchesAndRequiresDuelsTitle() {
-        assertTrue(DuelGlow.isDuelMatch("DUELS - NA", List.of("Round: 1", "Time: 00:30")));
-        assertTrue(DuelGlow.isDuelMatch("COMPETITIVE", List.of("Opponent: Player")));
-        assertFalse(DuelGlow.isDuelMatch("BATTLE ROYALE", List.of("Round: 1")));
+    void acceptsFormattedMarkersAndTimers() {
+        assertTrue(DuelGlow.isDuelMatch(List.of(
+            "§709/30/26 NA §8D§71§r", "§eTime §fLeft: §700:30")));
+        assertTrue(DuelGlow.isDuelMatch(List.of("NA d2", "time left: 00:30")));
     }
 
     @Test
-    void matchesWholeLobbyIdsRatherThanPlayerNamesOrLargerNumbers() {
-        for (String line : List.of("D11", "D100", "D0", "PlayerD1", "D1Player", "Player_D1")) {
-            assertTrue(DuelGlow.isDuelMatch("DUELS", List.of(line)), line);
+    void playerNamesDoNotCountAsDuelMarkers() {
+        for (String name : List.of("PlayerD1", "D1Player", "Player_D1", "David")) {
+            assertFalse(DuelGlow.isDuelMatch(List.of(name, "Time Left: 00:30")), name);
         }
     }
 }
