@@ -47,14 +47,18 @@ public final class HopliteAutomation {
             lastMessage = "";
         });
 
+        // 26.3's Fabric GAME event passes server-origin instead of overlay.
+        // Receive server system messages directly from their packet on that version.
+        //? <26.3 {
         ClientReceiveMessageEvents.GAME.register(HopliteAutomation::onGameMessage);
+        //?}
         ClientReceiveMessageEvents.CHAT.register((message, signed, sender, params, receivedAt) ->
             onChatMessage(message)
         );
         ClientTickEvents.END_CLIENT_TICK.register(HopliteAutomation::tick);
     }
 
-    private static void onGameMessage(Component message, boolean overlay) {
+    public static void onGameMessage(Component message, boolean overlay) {
         if (!isEnabled()) {
             return;
         }
