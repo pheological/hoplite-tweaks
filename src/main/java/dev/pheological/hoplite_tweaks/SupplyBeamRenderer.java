@@ -83,9 +83,9 @@ final class SupplyBeamRenderer {
             matrices.translate(relative.x * scale, relative.y * scale, relative.z * scale);
             matrices.scale((float) scale, (float) scale, (float) scale);
             //? >=26 {
-            /*context.submitNodeCollector().submitCustomGeometry(
+            /*SeeThroughGeometry.submit(context.submitNodeCollector(),
             *///?} else {
-            context.commandQueue().submitCustomGeometry(
+            SeeThroughGeometry.submit(context.commandQueue(),
             //?}
                 matrices, RenderTypes.textSeeThrough(WHITE),
                 (pose, vertices) -> geometry(pose, vertices, right, bottomWidth, topWidth, (float) height, color));

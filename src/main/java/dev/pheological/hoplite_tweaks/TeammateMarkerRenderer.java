@@ -267,9 +267,9 @@ public final class TeammateMarkerRenderer {
             //?}
             matrices.scale((float) scale, (float) scale, (float) scale);
             //? >=26 {
-            /*context.submitNodeCollector().submitCustomGeometry(
+            /*SeeThroughGeometry.submit(context.submitNodeCollector(),
             *///?} else {
-            context.commandQueue().submitCustomGeometry(
+            SeeThroughGeometry.submit(context.commandQueue(),
             //?}
                 matrices,
                 RenderTypes.textSeeThrough(marker.death
@@ -362,9 +362,9 @@ public final class TeammateMarkerRenderer {
         );
         matrices.scale((float) projectionScale, (float) projectionScale, (float) projectionScale);
         //? >=26 {
-        /*context.submitNodeCollector().submitCustomGeometry(
+        /*SeeThroughGeometry.submit(context.submitNodeCollector(),
         *///?} else {
-        context.commandQueue().submitCustomGeometry(
+        SeeThroughGeometry.submit(context.commandQueue(),
         //?}
             matrices,
             RenderTypes.textSeeThrough(BEAM_TEXTURE),

@@ -4,6 +4,10 @@
 
 # Changelog
 
+## 1.2.9
+
+- Fixed supply, death, and disconnected-location beams and teammate markers crashing Minecraft 26.3 with Improved Transparency enabled.
+
 ## 1.2.8
 
 - Fixed platform publishing so an unconfigured CurseForge target cannot interrupt Modrinth releases.
