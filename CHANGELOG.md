@@ -6,6 +6,8 @@
 
 ## 1.2.9
 
+- Restored visible beam and teammate marker rendering by using the distance-sorted see-through pass independently of debug gizmos.
+
 - Fixed supply, death, and disconnected-location beams and teammate markers crashing Minecraft 26.3 with Improved Transparency enabled.
 
 ## 1.2.8
