@@ -89,7 +89,7 @@ public final class HopliteAutomation {
             ? ""
             : client.player.getGameProfile().name().toLowerCase(Locale.ROOT);
 
-        boolean partyMessage = hasStyledText(message, "party", HopliteAutomation::isBlue);
+        boolean partyMessage = hasStyledText(message, "party", HopliteAutomation::isBlue, true);
         boolean mentioned = !playerName.isBlank() && lower.contains(playerName);
         boolean sentByPlayer = !playerName.isBlank() && lower.contains(playerName + ":");
         if (config.partyMessagePing && !sentByPlayer && (partyMessage || mentioned)) {
@@ -175,10 +175,20 @@ public final class HopliteAutomation {
         String needle,
         java.util.function.IntPredicate colorPredicate
     ) {
+        return hasStyledText(message, needle, colorPredicate, false);
+    }
+
+    private static boolean hasStyledText(
+        Component message,
+        String needle,
+        java.util.function.IntPredicate colorPredicate,
+        boolean requireBold
+    ) {
         String lowerNeedle = needle.toLowerCase(Locale.ROOT);
         return message.toFlatList().stream().anyMatch(part -> {
             TextColor color = part.getStyle().getColor();
             return color != null
+                && (!requireBold || part.getStyle().isBold())
                 && part.getString().toLowerCase(Locale.ROOT).contains(lowerNeedle)
                 && colorPredicate.test(color.getValue());
         });
