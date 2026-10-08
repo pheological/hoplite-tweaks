@@ -26,6 +26,7 @@ This setting allows you to show kills in the tab list and/or player nametags. It
 
 - **Anti Slur**: Prevents you from using slurs, which helps stop you from being muted automatically.
 - **Team Glow**: Adds a glowing effect to teammates in competitive duels.
+- **Quickcraft most recent**: An unbound keybind that activates the latest clickable “you have all the items to craft” chat prompt.
 - **Mention Ping**: Plays a ping sound when your name is mentioned or someone sends a message in party chat.
 - **Auto Party Chat**: Automatically puts you in party chat after joining a party.
 - **Auto Pet**: Automatically pets the dragon during dragon scatter games.

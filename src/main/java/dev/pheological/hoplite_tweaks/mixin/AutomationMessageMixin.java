@@ -4,6 +4,7 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import org.spongepowered.asm.mixin.Mixin;
 //? >=26.3 {
 /*import dev.pheological.hoplite_tweaks.HopliteAutomation;
+import dev.pheological.hoplite_tweaks.QuickcraftKeybind;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,6 +21,7 @@ public abstract class AutomationMessageMixin {
         CallbackInfo callback
     ) {
         HopliteAutomation.onGameMessage(packet.content(), packet.overlay());
+        QuickcraftKeybind.onGameMessage(packet.content(), packet.overlay());
     }
     *///?}
 }
