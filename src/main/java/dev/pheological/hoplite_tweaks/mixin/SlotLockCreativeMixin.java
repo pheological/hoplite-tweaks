@@ -17,16 +17,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class SlotLockCreativeMixin {
 
     //? >=26 {
-    /*@Inject(method = "slotClicked", at = @At("HEAD"), cancellable = true)
+    /*@Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ContainerInput;)V", at = @At("HEAD"), cancellable = true)
     private void hopliteTweaks$protectClick(Slot slot, int slotId, int button, ContainerInput type, CallbackInfo ci) {
     *///?} else {
-    @Inject(method = "slotClicked", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ClickType;)V", at = @At("HEAD"), cancellable = true)
     private void hopliteTweaks$protectClick(Slot slot, int slotId, int button, ClickType type, CallbackInfo ci) {
     //?}
         if (SlotLockClicks.before(((AbstractContainerScreen<?>) (Object) this).getMenu(), slot, slotId, type.name())) ci.cancel();
     }
 
-    @Inject(method = "slotClicked", at = @At("RETURN"))
+    //? >=26 {
+    /*@Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ContainerInput;)V", at = @At("RETURN"))
+    *///?} else {
+    @Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ClickType;)V", at = @At("RETURN"))
+    //?}
     private void hopliteTweaks$trackCursor(CallbackInfo ci) {
         SlotLockClicks.after(((AbstractContainerScreen<?>) (Object) this).getMenu());
     }

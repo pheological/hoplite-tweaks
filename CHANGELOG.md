@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- Fixed Minecraft 26.3 startup by targeting the exact inventory slot-click overload for slot locking.
+
 - Replaced sword and legendary double-tap protection with persistent inventory slot locks, toggled with L and marked with a lock icon.
 
 ## 1.2.9
