@@ -67,3 +67,9 @@ The snapshot is empty when Hoplite or Team Tracker is disabled, or no world is
 loaded. It excludes the local player, dead teammates, disconnected locations, and
 other dimensions. No new settings or EvergreenHUD dependency are introduced.
 EvergreenHUD must consume this interface to display the heads in its Direction HUD.
+
+## Building runnable JARs
+
+Run `./gradlew buildAndCollect` to build all supported Minecraft versions. All runnable JARs are collected together in `build/libs/<mod-version>/` (currently `build/libs/1.3.0/`). Individual runnable-JAR tasks also update this shared folder automatically. This command does not generate sources or Javadoc JARs.
+
+Run `./gradlew test` separately to run the test suites.

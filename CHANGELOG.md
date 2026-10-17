@@ -4,7 +4,9 @@
 
 # Changelog
 
-## Unreleased
+## 1.3.0
+
+- Automatically collect runnable JARs for every Minecraft version in the shared `build/libs/1.3.0/` folder.
 
 - Fixed Minecraft 26.3 startup by targeting the exact inventory slot-click overload for slot locking.
 

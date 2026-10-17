@@ -188,12 +188,14 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun Project.registerBuildAndCollectTask(ctx: Context) {
-		tasks.register<Copy>("buildAndCollect") {
-			val runnableJar = tasks.named(ctx.extension.jarTask.get())
+		val runnableJar = tasks.named(ctx.extension.jarTask.get())
+		val collect = tasks.register<Copy>("buildAndCollect") {
 			from(runnableJar)
 			into(rootProject.layout.buildDirectory.file("libs/${ctx.basicVersion}"))
 			dependsOn(runnableJar)
 			group = "build"
+			description = "Collect the runnable mod JAR in the shared version folder."
 		}
+		runnableJar.configure { finalizedBy(collect) }
 	}
 }
