@@ -4,6 +4,10 @@
 
 # Changelog
 
+## 1.3.1
+
+- Bumped the mod version to 1.3.1; gameplay behavior is unchanged.
+
 ## 1.3.0
 
 - Automatically collect runnable JARs for every Minecraft version in the shared `build/libs/1.3.0/` folder.

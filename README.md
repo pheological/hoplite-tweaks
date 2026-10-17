@@ -70,6 +70,6 @@ EvergreenHUD must consume this interface to display the heads in its Direction H
 
 ## Building runnable JARs
 
-Run `./gradlew buildAndCollect` to build all supported Minecraft versions. All runnable JARs are collected together in `build/libs/<mod-version>/` (currently `build/libs/1.3.0/`). Individual runnable-JAR tasks also update this shared folder automatically. This command does not generate sources or Javadoc JARs.
+Run `./gradlew buildAndCollect` to build all supported Minecraft versions. All runnable JARs are collected together in `build/libs/<mod-version>/` (currently `build/libs/1.3.1/`). Individual runnable-JAR tasks also update this shared folder automatically. This command does not generate sources or Javadoc JARs.
 
 Run `./gradlew test` separately to run the test suites.
