@@ -8,6 +8,46 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HopliteTweaksConfigTest {
     @Test
+    void slotLocksDefaultEmptyAndIgnoreLegacyDropPreferences() {
+        var gson = new com.google.gson.Gson();
+        var config = gson.fromJson("{\"doubleTapSwordDrop\":true,\"doubleTapLegendaryDrop\":false}", HopliteTweaksConfig.class);
+        assertTrue(config.slotLock);
+        assertTrue(config.lockedSlots.isEmpty());
+        assertFalse(gson.toJson(config).contains("doubleTap"));
+    }
+
+    @Test
+    void slotPositionsToggleAndPersistAcrossSerialization() {
+        var config = new HopliteTweaksConfig();
+        assertTrue(config.toggleSlotLock(0));
+        assertTrue(config.toggleSlotLock(35));
+        assertFalse(config.toggleSlotLock(-1));
+        assertFalse(config.toggleSlotLock(36));
+        var gson = new com.google.gson.Gson();
+        var restored = gson.fromJson(gson.toJson(config), HopliteTweaksConfig.class);
+        assertTrue(restored.isSlotLocked(0));
+        assertTrue(restored.isSlotLocked(35));
+        assertFalse(restored.isSlotLocked(1));
+        assertTrue(restored.toggleSlotLock(0));
+        assertFalse(restored.isSlotLocked(0));
+    }
+
+    @Test
+    void disablingProtectionRetainsLocksAndDoesNotToggleThem() {
+        var config = new HopliteTweaksConfig();
+        config.toggleSlotLock(8);
+        config.slotLock = false;
+        assertFalse(config.isSlotLocked(8));
+        assertFalse(config.toggleSlotLock(8));
+        config.slotLock = true;
+        config.enabled = false;
+        assertFalse(config.isSlotLocked(8));
+        config.enabled = true;
+        assertTrue(config.isSlotLocked(8));
+        assertFalse(config.isSlotLocked(40));
+    }
+
+    @Test
     void autoViewBobbingDefaultsOffAndRoundTrips() {
         HopliteTweaksConfig config = new HopliteTweaksConfig();
         assertFalse(config.autoViewBobbing);

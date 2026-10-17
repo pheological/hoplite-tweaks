@@ -49,6 +49,11 @@ public final class HopliteHud {
     private static void render(GuiGraphics graphics, net.minecraft.client.DeltaTracker tickCounter) {
     //?}
         Minecraft client = Minecraft.getInstance();
+        if (SlotLock.active() && client.player != null && !isGuiHidden(client)) {
+            for (int slot = 0; slot < 9; slot++) {
+                if (SlotLock.isLocked(slot)) SlotLock.render(graphics, guiWidth(graphics) / 2 - 80 + slot * 20, guiHeight(graphics) - 19);
+            }
+        }
         if (!HopliteSession.isActive()
             || !HopliteTweaksConfig.get().enabled
             || client.player == null

@@ -429,14 +429,9 @@ public final class HopliteTweaksConfigScreen {
                     "Automatically clicks Hoplite's “click here to apply” skin prompt.",
                     defaults.autoApplySkins, () -> config.autoApplySkins,
                     value -> config.autoApplySkins = value))
-                .option(toggle("Double tap to drop sword",
-                    "Requires two drop-key presses within 600 ms to drop a sword from the hotbar.",
-                    defaults.doubleTapSwordDrop, () -> config.doubleTapSwordDrop,
-                    value -> config.doubleTapSwordDrop = value))
-                .option(toggle("Double tap to drop legendary",
-                    "Requires two drop-key presses within 600 ms to drop a recognized legendary from the hotbar.",
-                    defaults.doubleTapLegendaryDrop, () -> config.doubleTapLegendaryDrop,
-                    value -> config.doubleTapLegendaryDrop = value))
+                .option(toggle("Slot Lock",
+                    "Prevents dropping items from locked slots. Press L while hovering over a slot in your inventory to lock or unlock it.",
+                    defaults.slotLock, () -> config.slotLock, value -> config.slotLock = value))
                 .build())
             .build();
     }

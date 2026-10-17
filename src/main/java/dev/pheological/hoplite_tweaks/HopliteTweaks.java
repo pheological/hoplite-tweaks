@@ -22,6 +22,7 @@ public final class HopliteTweaks {
     public static void initializeClient() {
         HopliteTweaksConfig.load();
         ConfigKeybind.initialize();
+        SlotLock.initialize();
         TeamTrackerKeybind.initialize();
         QuakeProKeybind.initialize();
         QuickcraftKeybind.initialize();

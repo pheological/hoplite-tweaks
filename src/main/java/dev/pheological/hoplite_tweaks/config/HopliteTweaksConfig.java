@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HopliteTweaksConfig {
-    private static final int CURRENT_CONFIG_VERSION = 14;
+    private static final int CURRENT_CONFIG_VERSION = 15;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static HopliteTweaksConfig instance = new HopliteTweaksConfig();
 
@@ -64,8 +64,8 @@ public final class HopliteTweaksConfig {
     public boolean weeklyCrateReminder = true;
     public boolean autoPet = true;
     public boolean autoApplySkins = true;
-    public boolean doubleTapSwordDrop = true;
-    public boolean doubleTapLegendaryDrop = true;
+    public boolean slotLock = true;
+    public java.util.Set<Integer> lockedSlots = new java.util.HashSet<>();
     public boolean antiSlur = true;
     public boolean messageDelay = false;
     public int markerScalePercent = 100;
@@ -153,8 +153,6 @@ public final class HopliteTweaksConfig {
     static void migrate(HopliteTweaksConfig config, int loadedVersion) {
         if (loadedVersion < 1) {
             config.autoApplySkins = true;
-            config.doubleTapSwordDrop = true;
-            config.doubleTapLegendaryDrop = true;
         }
         if (loadedVersion < 2) {
             config.hideDistanceWhenTeammateInRenderDistance = true;
@@ -211,7 +209,21 @@ public final class HopliteTweaksConfig {
         }
     }
 
+    public boolean isSlotLocked(int slot) {
+        return enabled && slotLock && slot >= 0 && slot < 36
+            && lockedSlots != null && lockedSlots.contains(slot);
+    }
+
+    public boolean toggleSlotLock(int slot) {
+        if (!enabled || !slotLock || slot < 0 || slot >= 36) return false;
+        if (lockedSlots == null) lockedSlots = new java.util.HashSet<>();
+        if (!lockedSlots.remove(slot)) lockedSlots.add(slot);
+        return true;
+    }
+
     private void clamp() {
+        if (lockedSlots == null) lockedSlots = new java.util.HashSet<>();
+        lockedSlots.removeIf(slot -> slot == null || slot < 0 || slot >= 36);
         if (killDisplay == null) killDisplay = KillDisplay.BOTH;
         if (killPlacement == null) killPlacement = KillPlacement.NEXT_TO_NAME;
         if (dripstoneDisplay == null) dripstoneDisplay = KillDisplay.BOTH;

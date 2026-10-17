@@ -1,15 +1,10 @@
 package dev.pheological.hoplite_tweaks.mixin;
 
-import dev.pheological.hoplite_tweaks.DropProtection;
-import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
-import net.minecraft.client.Minecraft;
+import dev.pheological.hoplite_tweaks.SlotLock;
 //? >=26.3 {
 /*import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 *///?}
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Protects selected hotbar swords and legendaries from accidental single-press drops.
+ * Prevents dropping items from locked hotbar slots.
  */
 //? >=26.3 {
 /*@Mixin(MultiPlayerGameMode.class)
@@ -27,54 +22,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LocalPlayer.class)
 //?}
 public abstract class LocalPlayerMixin {
-    private static final long DOUBLE_TAP_WINDOW_MILLIS = 600;
-    private static long pendingDropUntil;
-    private static int pendingSlot = -1;
-    private static Item pendingItem;
-
     //? >=26.3 {
     /*@Inject(method = "dropItem", at = @At("HEAD"), cancellable = true)
-    private void hopliteTweaks$requireDoubleTapForSwordDrop(
+    private void hopliteTweaks$preventLockedDrop(
         LocalPlayer player,
         boolean dropEntireStack,
         CallbackInfo callback
     ) {
     *///?} else {
     @Inject(method = "drop", at = @At("HEAD"), cancellable = true)
-    private void hopliteTweaks$requireDoubleTapForSwordDrop(
+    private void hopliteTweaks$preventLockedDrop(
         boolean dropEntireStack,
         CallbackInfoReturnable<Boolean> callback
     ) {
     //?}
-        Minecraft client = Minecraft.getInstance();
         //? <26.3 {
         LocalPlayer player = (LocalPlayer) (Object) this;
         //?}
-        ItemStack selected = player.getInventory().getSelectedItem();
-
-        HopliteTweaksConfig config = HopliteTweaksConfig.get();
-        boolean protectedSword = config.doubleTapSwordDrop && isSword(selected);
-        boolean protectedLegendary = config.doubleTapLegendaryDrop
-            && DropProtection.isLegendary(selected);
-        if (!config.enabled
-            || isScreenOpen(client)
-            || (!protectedSword && !protectedLegendary)) {
-            clearPendingDrop();
-            return;
-        }
-
-        long now = System.currentTimeMillis();
-        int slot = player.getInventory().getSelectedSlot();
-        Item item = selected.getItem();
-        if (now <= pendingDropUntil && slot == pendingSlot && item == pendingItem) {
-            clearPendingDrop();
-            return;
-        }
-
-        pendingDropUntil = now + DOUBLE_TAP_WINDOW_MILLIS;
-        pendingSlot = slot;
-        pendingItem = item;
-        DropProtection.showPressAgainMessage();
+        if (!SlotLock.isLocked(player.getInventory().getSelectedSlot())) return;
         //? >=26.3 {
         /*callback.cancel();
         *///?} else {
@@ -82,25 +47,4 @@ public abstract class LocalPlayerMixin {
         //?}
     }
 
-    private static boolean isSword(ItemStack stack) {
-        //? >=26 {
-        /*return stack.typeHolder().is(ItemTags.SWORDS);
-        *///?} else {
-        return stack.is(ItemTags.SWORDS);
-        //?}
-    }
-
-    private static boolean isScreenOpen(Minecraft client) {
-        //? >=26.2 {
-        /*return client.gui.screen() != null;
-        *///?} else {
-        return client.screen != null;
-        //?}
-    }
-
-    private static void clearPendingDrop() {
-        pendingDropUntil = 0;
-        pendingSlot = -1;
-        pendingItem = null;
-    }
 }

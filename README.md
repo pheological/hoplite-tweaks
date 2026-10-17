@@ -31,8 +31,7 @@ This setting allows you to show kills in the tab list and/or player nametags. It
 - **Auto Party Chat**: Automatically puts you in party chat after joining a party.
 - **Auto Pet**: Automatically pets the dragon during dragon scatter games.
 - **Auto Apply Skins**: Automatically applies weapon skins after you obtain a legendary item.
-- **Double Tap to Drop Sword**: Press the drop key twice to drop your weapon.
-- **Double Tap to Drop Legendary**: Requires two presses of the drop key to drop legendary items.
+- **Slot Lock**: Prevents dropping items from locked slots. Press L while hovering over a player inventory slot to lock or unlock it. Locks are remembered between sessions; moving items is still allowed.
 - **Ping Header**: Shows ping in or above player nametags.
 - **No Lava Fog**: Allows you to see under lava.
 

@@ -4,6 +4,10 @@
 
 # Changelog
 
+## Unreleased
+
+- Replaced sword and legendary double-tap protection with persistent inventory slot locks, toggled with L and marked with a lock icon.
+
 ## 1.2.9
 
 - Restored visible beam and teammate marker rendering by using the distance-sorted see-through pass independently of debug gizmos.
