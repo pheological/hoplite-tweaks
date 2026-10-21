@@ -76,7 +76,7 @@ fun Project.configureModPublishing(ctx: Context) {
 		changelog.set(rootProject.file("CHANGELOG.md").readText())
 		modLoaders.add(ctx.loader.id)
 
-		displayName = "${ctx.modId}-${ctx.fullVersion}"
+		displayName = ctx.baseVersion
 
 		val deps = ctx.extension.dependencies
 

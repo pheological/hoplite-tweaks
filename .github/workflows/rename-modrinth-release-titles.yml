@@ -1,0 +1,23 @@
+name: Rename Modrinth 1.3.3 release titles
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rename-modrinth-release-titles
+  cancel-in-progress: false
+
+jobs:
+  rename:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rename and verify the four existing releases
+        env:
+          PUB_MODRINTH_TOKEN: ${{ secrets.PUB_MODRINTH_TOKEN }}
+        run: python3 scripts/rename-modrinth-1.3.3.py
