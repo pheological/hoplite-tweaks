@@ -12,7 +12,7 @@ This setting allows you to see all teammates regardless of distance in Civilizat
 
 ### Cooldown Viewer
 
-On Lunar Client, Lunar handles Apollo cooldowns and server mod restrictions; Hoplite Tweaks leaves Lunar’s Apollo channel untouched and does not populate its own Apollo cooldown display.
+On Lunar Client, Hoplite Tweaks reads a copy of incoming Apollo messages for its cooldown display while leaving the original messages and channel ownership untouched so Lunar can enforce server mod restrictions.
 
 This setting shows cooldowns for all legendary items. Typically, the action bar only allows you to see the cooldown of one item at a time, but this setting allows you to see all of them.
 

@@ -53,7 +53,7 @@ public final class HopliteTweaks {
                 }
             });
         } else {
-            LOGGER.info("Lunar Client detected; leaving lunar:apollo to Lunar for server restrictions and cooldowns");
+            LOGGER.info("Lunar Client detected; observing cooldowns without taking ownership of lunar:apollo");
         }
         ClientPlayNetworking.registerGlobalReceiver(TeammatesPayload.TYPE, (payload, context) -> {
             if (!HopliteSession.isActive()) return;

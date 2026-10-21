@@ -19,6 +19,11 @@ class SlotLockMixinTargetTest {
         verify("SlotLockCreativeMixin", "net/minecraft/client/gui/screens/inventory/CreativeModeInventoryScreen");
     }
 
+    @Test
+    void apolloObserverResolvesToTheNativeDecoder() throws IOException {
+        verify("ApolloPayloadObserverMixin", "net/minecraft/network/protocol/common/custom/CustomPacketPayload$1");
+    }
+
     private void verify(String mixin, String targetName) throws IOException {
         ClassNode target = read(targetName);
         ClassNode source = read("dev/pheological/hoplite_tweaks/mixin/" + mixin);

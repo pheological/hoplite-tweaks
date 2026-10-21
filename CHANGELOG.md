@@ -4,6 +4,11 @@
 
 # Changelog
 
+## 1.3.3
+
+- Restore Hoplite Tweaks cooldowns on Lunar Client by observing a copy of Apollo messages without consuming, replacing, or cancelling Lunar’s original messages.
+- Keep Lunar in control of its Apollo channel so server restrictions, including the freelook lock, remain enforced.
+
 ## 1.3.2
 
 - Leave Lunar Client’s Apollo channel under Lunar’s control so server restrictions, including the freelook lock, can be applied.
