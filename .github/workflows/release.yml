@@ -194,8 +194,8 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          java-version: 25
-          distribution: 'microsoft'
+          java-version: 26
+          distribution: 'temurin'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -215,7 +215,11 @@ jobs:
       - name: Validate release JAR names
         run: |
           TAG="${GITHUB_REF_NAME}"
-          for MC_VERSION in 1.21.11 26.1.2 26.2; do
+          MC_VERSIONS="1.21.11 26.1.2 26.2"
+          if [[ "$TAG" == "1.3.3" ]]; then
+            MC_VERSIONS="$MC_VERSIONS 26.3"
+          fi
+          for MC_VERSION in $MC_VERSIONS; do
             JAR="build/libs/${TAG}/hoplite_tweaks-${TAG}-fabric+${MC_VERSION}.jar"
             if [[ ! -f "$JAR" ]]; then
               echo "::error::Missing correctly named release JAR: $JAR"
@@ -225,7 +229,7 @@ jobs:
 
       # Keep these as separate steps so GitHub Actions cannot reorder or
       # parallelize platform uploads. Minecraft 26.3 requires separate,
-      # explicit owner approval.
+      # explicit owner approval, granted for release 1.3.3.
       - name: Publish Minecraft 1.21.11 to Modrinth
         run: ./gradlew publish1.21.11 --no-parallel --stacktrace
 
@@ -234,3 +238,7 @@ jobs:
 
       - name: Publish Minecraft 26.2 to Modrinth
         run: ./gradlew publish26.2 --no-parallel --stacktrace
+
+      - name: Publish owner-approved Minecraft 26.3 to Modrinth
+        if: github.ref_name == '1.3.3'
+        run: ./gradlew publish26.3 --no-parallel --stacktrace

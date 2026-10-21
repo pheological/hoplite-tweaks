@@ -20,19 +20,20 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
+          java-version: 26
 
       - uses: gradle/actions/setup-gradle@v4
 
       - run: chmod +x gradlew
 
-      - name: Build
-        run: ./gradlew build
+      - name: Test all Minecraft versions
+        run: ./gradlew :1.21.11-fabric:test :26.1.2-fabric:test :26.2-fabric:test :26.3-fabric:test
+
+      - name: Build runnable JARs
+        run: ./gradlew :1.21.11-fabric:remapJar :26.1.2-fabric:jar :26.2-fabric:jar :26.3-fabric:jar
 
       - name: Upload jars
         uses: actions/upload-artifact@v4
         with:
           name: hoplite-tweaks
-          path: |
-            versions/**/build/libs/*.jar
-            build/libs/*.jar
+          path: build/libs/
