@@ -4,6 +4,11 @@
 
 # Changelog
 
+## 1.3.2
+
+- Leave Lunar Client’s Apollo channel under Lunar’s control so server restrictions, including the freelook lock, can be applied.
+- On Lunar Client, rely on Lunar for Apollo cooldowns; the Hoplite Tweaks Apollo cooldown display remains available on ordinary Fabric.
+
 ## 1.3.1
 
 - Bumped the mod version to 1.3.1; gameplay behavior is unchanged.

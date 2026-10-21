@@ -2,6 +2,7 @@ package dev.pheological.hoplite_tweaks;
 
 import dev.pheological.hoplite_tweaks.apollo.ApolloProtocol;
 import dev.pheological.hoplite_tweaks.apollo.ApolloState;
+import dev.pheological.hoplite_tweaks.apollo.ApolloCompatibility;
 import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
 import dev.pheological.hoplite_tweaks.network.ApolloPayload;
 import dev.pheological.hoplite_tweaks.network.ResetTeammatesPayload;
@@ -27,22 +28,33 @@ public final class HopliteTweaks {
         QuakeProKeybind.initialize();
         QuickcraftKeybind.initialize();
 
+        // Lunar must retain ownership of its channel, including server mod restrictions.
+        boolean registerApollo = ApolloCompatibility.shouldRegisterChannel(
+            HopliteTweaks.class.getClassLoader());
         //? >=26 {
-        /*PayloadTypeRegistry.clientboundPlay().register(ApolloPayload.TYPE, ApolloPayload.CODEC);
+        /*if (registerApollo) {
+            PayloadTypeRegistry.clientboundPlay().register(ApolloPayload.TYPE, ApolloPayload.CODEC);
+        }
         PayloadTypeRegistry.clientboundPlay().register(TeammatesPayload.TYPE, TeammatesPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ResetTeammatesPayload.TYPE, ResetTeammatesPayload.CODEC);
         *///?} else {
-        PayloadTypeRegistry.playS2C().register(ApolloPayload.TYPE, ApolloPayload.CODEC);
+        if (registerApollo) {
+            PayloadTypeRegistry.playS2C().register(ApolloPayload.TYPE, ApolloPayload.CODEC);
+        }
         PayloadTypeRegistry.playS2C().register(TeammatesPayload.TYPE, TeammatesPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ResetTeammatesPayload.TYPE, ResetTeammatesPayload.CODEC);
         //?}
-        ClientPlayNetworking.registerGlobalReceiver(ApolloPayload.TYPE, (payload, context) -> {
-            if (HopliteSession.isActive()) {
-                ApolloProtocol.accept(payload.data());
-            } else {
-                ApolloState.clear();
-            }
-        });
+        if (registerApollo) {
+            ClientPlayNetworking.registerGlobalReceiver(ApolloPayload.TYPE, (payload, context) -> {
+                if (HopliteSession.isActive()) {
+                    ApolloProtocol.accept(payload.data());
+                } else {
+                    ApolloState.clear();
+                }
+            });
+        } else {
+            LOGGER.info("Lunar Client detected; leaving lunar:apollo to Lunar for server restrictions and cooldowns");
+        }
         ClientPlayNetworking.registerGlobalReceiver(TeammatesPayload.TYPE, (payload, context) -> {
             if (!HopliteSession.isActive()) return;
             HopliteTeammates.accept(payload);
