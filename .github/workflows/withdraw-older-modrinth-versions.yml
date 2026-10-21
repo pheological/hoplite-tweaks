@@ -1,0 +1,23 @@
+name: Withdraw older Modrinth versions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: withdraw-older-modrinth-versions
+  cancel-in-progress: false
+
+jobs:
+  withdraw:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Delete and verify only the 47 owner-approved older releases
+        env:
+          PUB_MODRINTH_TOKEN: ${{ secrets.PUB_MODRINTH_TOKEN }}
+        run: python3 scripts/withdraw-older-modrinth-versions.py --delete
