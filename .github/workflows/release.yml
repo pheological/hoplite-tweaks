@@ -11,10 +11,18 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Existing release tag to publish for Minecraft 1.21.11 only
+        description: Existing release tag to publish for the selected Minecraft version
         required: true
         type: string
         default: '1.3.4'
+      minecraft_version:
+        description: Owner-approved Minecraft version to publish
+        required: true
+        type: choice
+        default: '1.21.11'
+        options:
+          - '1.21.11'
+          - '26.3'
 
 permissions:
   contents: write
@@ -258,13 +266,14 @@ jobs:
         run: ./gradlew publish26.3 --no-parallel --stacktrace
 
   single-version-release:
-    name: Release Minecraft 1.21.11 only
+    name: Release Minecraft ${{ inputs.minecraft_version }} only
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
       RELEASE_TAG: ${{ inputs.release_tag }}
+      MC_VERSION: ${{ inputs.minecraft_version }}
       MOD_IS_RELEASE: true
       PUB_DRY_RUN: ${{ vars.PUB_DRY_RUN }}
       PUB_MODS_ENABLE: ${{ vars.PUB_MODS_ENABLE }}
@@ -285,6 +294,8 @@ jobs:
           import re
           from pathlib import Path
 
+          if os.environ["MC_VERSION"] not in {"1.21.11", "26.3"}:
+              raise SystemExit("Unsupported release target")
           tag = os.environ["RELEASE_TAG"]
           properties = Path("stonecutter.properties.toml").read_text()
           version = re.search(r'^mod\.version\s*=\s*"([^"]+)"', properties, re.M).group(1)
@@ -320,31 +331,37 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Test Minecraft 1.21.11
-        run: ./gradlew :1.21.11-fabric:test --no-daemon
+      - name: Test selected Minecraft version
+        run: ./gradlew ":${MC_VERSION}-fabric:test" --no-daemon
 
-      - name: Build runnable Minecraft 1.21.11 JAR
-        run: ./gradlew :1.21.11-fabric:remapJar --no-daemon
+      - name: Build runnable JAR for selected Minecraft version
+        run: |
+          case "$MC_VERSION" in
+            1.21.11) ./gradlew :1.21.11-fabric:remapJar --no-daemon ;;
+            26.3) ./gradlew :26.3-fabric:jar --no-daemon ;;
+            *) echo "Unsupported release target"; exit 1 ;;
+          esac
 
-      - name: Ensure Minecraft 1.21.11 has not already been published
+      - name: Ensure selected Minecraft version has not already been published
         run: |
           python3 - <<'PYTHON'
           import json
           import os
           import urllib.request
+          import time
 
           project = os.environ["PUB_MODRINTH_PROJECT_ID"]
           request = urllib.request.Request(
-              f"https://api.modrinth.com/v2/project/{project}/version",
+              f"https://api.modrinth.com/v2/project/{project}/version?verification={time.time_ns()}",
               headers={"User-Agent": "pheological/hoplite-tweaks release verification"})
           with urllib.request.urlopen(request, timeout=30) as response:
               versions = json.load(response)
-          expected = os.environ["RELEASE_TAG"] + "-fabric+1.21.11"
+          expected = os.environ["RELEASE_TAG"] + "-fabric+" + os.environ["MC_VERSION"]
           if any(version["version_number"] == expected for version in versions):
-              raise SystemExit("Minecraft 1.21.11 is already published; refusing a duplicate upload")
+              raise SystemExit("Selected Minecraft version is already published; refusing a duplicate upload")
           PYTHON
 
-      - name: Publish Minecraft 1.21.11 to Modrinth
+      - name: Publish selected Minecraft version to Modrinth
         env:
           PUB_MODRINTH_TOKEN: ${{ secrets.PUB_MODRINTH_TOKEN }}
-        run: ./gradlew publish1.21.11 --no-parallel --stacktrace
+        run: ./gradlew "publish${MC_VERSION}" --no-parallel --stacktrace
