@@ -5,8 +5,7 @@ import dev.pheological.hoplite_tweaks.apollo.ApolloState;
 import dev.pheological.hoplite_tweaks.apollo.ApolloCompatibility;
 import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
 import dev.pheological.hoplite_tweaks.network.ApolloPayload;
-import dev.pheological.hoplite_tweaks.network.ResetTeammatesPayload;
-import dev.pheological.hoplite_tweaks.network.TeammatesPayload;
+import dev.pheological.hoplite_tweaks.network.TeammateNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -35,14 +34,10 @@ public final class HopliteTweaks {
         /*if (registerApollo) {
             PayloadTypeRegistry.clientboundPlay().register(ApolloPayload.TYPE, ApolloPayload.CODEC);
         }
-        PayloadTypeRegistry.clientboundPlay().register(TeammatesPayload.TYPE, TeammatesPayload.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(ResetTeammatesPayload.TYPE, ResetTeammatesPayload.CODEC);
         *///?} else {
         if (registerApollo) {
             PayloadTypeRegistry.playS2C().register(ApolloPayload.TYPE, ApolloPayload.CODEC);
         }
-        PayloadTypeRegistry.playS2C().register(TeammatesPayload.TYPE, TeammatesPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ResetTeammatesPayload.TYPE, ResetTeammatesPayload.CODEC);
         //?}
         if (registerApollo) {
             ClientPlayNetworking.registerGlobalReceiver(ApolloPayload.TYPE, (payload, context) -> {
@@ -55,12 +50,7 @@ public final class HopliteTweaks {
         } else {
             LOGGER.info("Lunar Client detected; observing cooldowns without taking ownership of lunar:apollo");
         }
-        ClientPlayNetworking.registerGlobalReceiver(TeammatesPayload.TYPE, (payload, context) -> {
-            if (!HopliteSession.isActive()) return;
-            HopliteTeammates.accept(payload);
-        });
-        ClientPlayNetworking.registerGlobalReceiver(ResetTeammatesPayload.TYPE,
-            (payload, context) -> HopliteTeammates.reset());
+        TeammateNetworking.initialize();
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> ApolloState.clear());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ApolloState.clear());

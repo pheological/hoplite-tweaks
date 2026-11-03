@@ -4,6 +4,11 @@
 
 # Changelog
 
+## 1.3.4
+
+- Fix startup crashes with teammate mods that register Hoplite’s teammate update or reset channels.
+- Preserve the other mod’s packet codecs and receivers while observing a separate copy for Hoplite Tweaks teammate features.
+
 ## 1.3.3
 
 - Restore Hoplite Tweaks cooldowns on Lunar Client by observing a copy of Apollo messages without consuming, replacing, or cancelling Lunar’s original messages.
