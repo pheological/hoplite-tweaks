@@ -1,19 +1,27 @@
 name: release
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.release_tag || github.ref_name }}
   cancel-in-progress: false
 
 on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to publish for Minecraft 1.21.11 only
+        required: true
+        type: string
+        default: '1.3.4'
 
 permissions:
   contents: write
 
 jobs:
   validate:
+    if: github.event_name == 'push'
     name: Validate Tag
     runs-on: ubuntu-latest
     permissions:
@@ -248,3 +256,95 @@ jobs:
       - name: Publish owner-approved Minecraft 26.3 to Modrinth
         if: github.ref_name == '1.3.3'
         run: ./gradlew publish26.3 --no-parallel --stacktrace
+
+  single-version-release:
+    name: Release Minecraft 1.21.11 only
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
+      MOD_IS_RELEASE: true
+      PUB_DRY_RUN: ${{ vars.PUB_DRY_RUN }}
+      PUB_MODS_ENABLE: ${{ vars.PUB_MODS_ENABLE }}
+      PUB_MODRINTH_STAGING: ${{ vars.PUB_MODRINTH_STAGING }}
+      PUB_MODRINTH_PROJECT_ID: ${{ vars.PUB_MODRINTH_PROJECT_ID }}
+
+    steps:
+      - name: Checkout existing release tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.release_tag }}
+          fetch-depth: 1
+
+      - name: Validate tag and extract approved changelog
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          import re
+          from pathlib import Path
+
+          tag = os.environ["RELEASE_TAG"]
+          properties = Path("stonecutter.properties.toml").read_text()
+          version = re.search(r'^mod\.version\s*=\s*"([^"]+)"', properties, re.M).group(1)
+          channel = re.search(r'^mod\.channel_tag\s*=\s*"([^"]*)"', properties, re.M).group(1)
+          if tag != version + channel:
+              raise SystemExit("Release tag does not match the checked-in version")
+          text = Path("CHANGELOG.md").read_text()
+          heading = f"## {tag}\n"
+          if heading not in text:
+              raise SystemExit("Missing approved release changelog")
+          notes = text.split(heading, 1)[1].split("\n## ", 1)[0].strip()
+          if not notes:
+              raise SystemExit("Empty approved release changelog")
+          Path("CHANGELOG.md").write_text(notes + "\n")
+          PYTHON
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 26
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Test Minecraft 1.21.11
+        run: ./gradlew :1.21.11-fabric:test --no-daemon
+
+      - name: Build runnable Minecraft 1.21.11 JAR
+        run: ./gradlew :1.21.11-fabric:remapJar --no-daemon
+
+      - name: Ensure Minecraft 1.21.11 has not already been published
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          import os
+          import urllib.request
+
+          project = os.environ["PUB_MODRINTH_PROJECT_ID"]
+          request = urllib.request.Request(
+              f"https://api.modrinth.com/v2/project/{project}/version",
+              headers={"User-Agent": "pheological/hoplite-tweaks release verification"})
+          with urllib.request.urlopen(request, timeout=30) as response:
+              versions = json.load(response)
+          expected = os.environ["RELEASE_TAG"] + "-fabric+1.21.11"
+          if any(version["version_number"] == expected for version in versions):
+              raise SystemExit("Minecraft 1.21.11 is already published; refusing a duplicate upload")
+          PYTHON
+
+      - name: Publish Minecraft 1.21.11 to Modrinth
+        env:
+          PUB_MODRINTH_TOKEN: ${{ secrets.PUB_MODRINTH_TOKEN }}
+        run: ./gradlew publish1.21.11 --no-parallel --stacktrace
