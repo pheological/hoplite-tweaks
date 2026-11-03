@@ -70,16 +70,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Prepare git-cliff
+      - name: Extract approved release changelog
         run: |
-          REPO_URL="https://github.com/${{ github.repository }}"
-          sed -i "s|%%%repo_url%%%|${REPO_URL}|g" cliff.toml
+          python3 - <<'PYTHON'
+          import os
+          from pathlib import Path
 
-      - name: Generate changelog with git-cliff
-        uses: orhun/git-cliff-action@v4
-        with:
-          args: --latest --strip header --output CHANGELOG.md
-          version: 'v2.10.1'
+          version = os.environ["GITHUB_REF_NAME"]
+          text = Path("CHANGELOG.md").read_text()
+          heading = f"## {version}\n"
+          if heading not in text:
+              raise SystemExit(f"Missing approved changelog for {version}")
+          notes = text.split(heading, 1)[1].split("\n## ", 1)[0].strip()
+          if not notes:
+              raise SystemExit(f"Empty approved changelog for {version}")
+          Path("CHANGELOG.md").write_text(notes + "\n")
+          PYTHON
 
       - name: Check GitHub releases toggle
         id: check

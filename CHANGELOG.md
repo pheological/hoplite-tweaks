@@ -6,8 +6,7 @@
 
 ## 1.3.4
 
-- Fix startup crashes with teammate mods that register Hoplite’s teammate update or reset channels.
-- Preserve the other mod’s packet codecs and receivers while observing a separate copy for Hoplite Tweaks teammate features.
+- Fixed the crash on the Hoplite modpack.
 
 ## 1.3.3
 
