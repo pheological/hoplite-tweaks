@@ -27,10 +27,21 @@ class QuickcraftKeybindTest {
     }
 
     @Test
+    void recognizesQuickcraftButtonWithoutDependingOnPromptWording() {
+        Component prompt = Component.literal("Recipe ready! ")
+            .append(Component.literal("[Help]").withStyle(style ->
+                style.withClickEvent(new ClickEvent.RunCommand("/help"))))
+            .append(Component.literal("[Craft]").withStyle(style ->
+                style.withClickEvent(new ClickEvent.RunCommand("/quickcraft sword"))));
+
+        assertEquals("/quickcraft sword", QuickcraftKeybind.commandFromPrompt(prompt));
+    }
+
+    @Test
     void ignoresUnrelatedMessagesAndPromptsWithoutRunnableCommands() {
         assertEquals("", QuickcraftKeybind.commandFromPrompt(null));
         assertEquals("", QuickcraftKeybind.commandFromPrompt(Component.literal("You need more items")
-            .withStyle(style -> style.withClickEvent(new ClickEvent.RunCommand("/quickcraft sword")))));
+            .withStyle(style -> style.withClickEvent(new ClickEvent.RunCommand("/help")))));
         assertEquals("", QuickcraftKeybind.commandFromPrompt(
             Component.literal("You have all the items to craft a sword!")));
         assertEquals("", QuickcraftKeybind.commandFromPrompt(

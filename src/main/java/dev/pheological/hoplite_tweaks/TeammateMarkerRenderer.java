@@ -118,7 +118,7 @@ public final class TeammateMarkerRenderer {
                 .filter(teammate -> ApolloState.deathLocations().stream()
                     .noneMatch(death -> death.teammate().playerId().equals(teammate.playerId())))
                 .filter(teammate -> sameDimension(teammate.world(), dimension))
-                .map(teammate -> marker(client, teammate, tickDelta, cameraPosition))
+                .map(teammate -> marker(client, teammate, cameraPosition))
             : Stream.empty();
         Stream<Marker> lastKnownMarkers = config.showLastKnownLocations
             ? ApolloState.lastKnownTeammates().stream()
@@ -144,7 +144,6 @@ public final class TeammateMarkerRenderer {
     private static Marker marker(
         Minecraft client,
         ApolloModels.Teammate teammate,
-        float tickDelta,
         Vec3 cameraPosition
     ) {
         AbstractClientPlayer loaded = client.level.players().stream()
@@ -153,12 +152,13 @@ public final class TeammateMarkerRenderer {
             .orElse(null);
         Vec3 worldPosition = loaded == null
             ? ApolloState.teammatePosition(teammate)
-            : loaded.getPosition(tickDelta);
+            : new Vec3(loaded.getX(), loaded.getY(), loaded.getZ());
         return new Marker(
             teammate,
             worldPosition,
             worldPosition.distanceTo(cameraPosition),
             loaded != null,
+            loaded == null ? 2.15D : loaded.getBbHeight() + 0.35D,
             HEALTH_DISPLAY_APPROVED ? tabHealth(client, teammate.playerId()) : -1.0F,
             false,
             false,
@@ -181,6 +181,7 @@ public final class TeammateMarkerRenderer {
             position,
             position.distanceTo(cameraPosition),
             false,
+            2.15D,
             -1.0F,
             true,
             false,
@@ -196,7 +197,7 @@ public final class TeammateMarkerRenderer {
             ? teammate.displayName()
             : entry.profileName();
         return new Marker(
-            teammate, position, position.distanceTo(cameraPosition), false, -1.0F,
+            teammate, position, position.distanceTo(cameraPosition), false, 2.15D, -1.0F,
             false, true, entry.diedAt(), profileName
         );
     }
@@ -225,7 +226,7 @@ public final class TeammateMarkerRenderer {
         Vec3 cameraPosition = context.worldState().cameraRenderState.pos;
         //?}
         Vec3 relative = marker.position.subtract(cameraPosition);
-        double height = 2.15D + config.markerHeightPercent / 100.0D;
+        double height = marker.baseHeight + config.markerHeightPercent / 100.0D;
         int color = marker.death
             ? fadedTextureColor(System.currentTimeMillis() - marker.diedAt,
                 config.deathMarkerDurationSeconds * 1_000L)
@@ -727,6 +728,7 @@ public final class TeammateMarkerRenderer {
         Vec3 position,
         double distance,
         boolean inRenderDistance,
+        double baseHeight,
         float health,
         boolean lastKnown,
         boolean death,

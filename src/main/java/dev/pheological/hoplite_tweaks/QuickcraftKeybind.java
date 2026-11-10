@@ -15,6 +15,8 @@ import net.minecraft.network.chat.ClickEvent;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 
+import java.util.Locale;
+
 public final class QuickcraftKeybind {
     private static KeyMapping quickcraftKey;
     private static String latestCommand = "";
@@ -61,18 +63,25 @@ public final class QuickcraftKeybind {
     }
 
     static String commandFromPrompt(Component message) {
-        if (message == null || !message.getString().toLowerCase(java.util.Locale.ROOT)
-            .contains("you have all the items to craft")) {
+        if (message == null) {
             return "";
         }
-        return message.toFlatList().stream()
-            .map(part -> part.getStyle().getClickEvent())
-            .filter(ClickEvent.RunCommand.class::isInstance)
-            .map(ClickEvent.RunCommand.class::cast)
-            .map(ClickEvent.RunCommand::command)
-            .filter(command -> !command.isBlank())
-            .findFirst()
-            .orElse("");
+        boolean craftingPrompt = message.getString().toLowerCase(Locale.ROOT)
+            .contains("you have all the items to craft");
+        String fallback = "";
+        for (Component part : message.toFlatList()) {
+            if (part.getStyle().getClickEvent() instanceof ClickEvent.RunCommand action) {
+                String command = action.command();
+                if (command.equalsIgnoreCase("/quickcraft")
+                    || command.regionMatches(true, 0, "/quickcraft ", 0, "/quickcraft ".length())) {
+                    return command;
+                }
+                if (craftingPrompt && fallback.isEmpty() && !command.isBlank()) {
+                    fallback = command;
+                }
+            }
+        }
+        return fallback;
     }
 
     private static void tick(Minecraft client) {
