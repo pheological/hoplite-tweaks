@@ -4,6 +4,11 @@
 
 # Changelog
 
+## 1.3.5
+
+- Place markers directly above loaded teammates using their current position and height.
+- Recognize clickable Quick Craft commands when the chat prompt wording changes.
+
 ## 1.3.4
 
 - Fixed the crash on the Hoplite modpack.
