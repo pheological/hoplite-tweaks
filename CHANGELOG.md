@@ -4,6 +4,10 @@
 
 # Changelog
 
+## 1.3.8
+
+- Smooth Team View markers above nearby players every frame using interpolated player positions.
+
 ## 1.3.7
 
 - Fix missing trap badges and kill credit for Pointed Dripstone deaths prefixed with ELIMINATION.

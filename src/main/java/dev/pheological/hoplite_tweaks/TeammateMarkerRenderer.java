@@ -118,7 +118,7 @@ public final class TeammateMarkerRenderer {
                 .filter(teammate -> ApolloState.deathLocations().stream()
                     .noneMatch(death -> death.teammate().playerId().equals(teammate.playerId())))
                 .filter(teammate -> sameDimension(teammate.world(), dimension))
-                .map(teammate -> marker(client, teammate, cameraPosition))
+                .map(teammate -> marker(client, teammate, cameraPosition, tickDelta))
             : Stream.empty();
         Stream<Marker> lastKnownMarkers = config.showLastKnownLocations
             ? ApolloState.lastKnownTeammates().stream()
@@ -144,7 +144,8 @@ public final class TeammateMarkerRenderer {
     private static Marker marker(
         Minecraft client,
         ApolloModels.Teammate teammate,
-        Vec3 cameraPosition
+        Vec3 cameraPosition,
+        float tickDelta
     ) {
         AbstractClientPlayer loaded = client.level.players().stream()
             .filter(player -> player.getUUID().equals(teammate.playerId()))
@@ -152,7 +153,7 @@ public final class TeammateMarkerRenderer {
             .orElse(null);
         Vec3 worldPosition = loaded == null
             ? ApolloState.teammatePosition(teammate)
-            : new Vec3(loaded.getX(), loaded.getY(), loaded.getZ());
+            : loaded.getPosition(tickDelta);
         return new Marker(
             teammate,
             worldPosition,
