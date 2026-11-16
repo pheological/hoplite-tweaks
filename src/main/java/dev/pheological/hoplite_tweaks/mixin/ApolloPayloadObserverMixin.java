@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Observe before native decoding; never replace a payload or cancel Lunar's handling. */
+/** Observe before native decoding; never replace a payload or cancel the owner's handling. */
 @Mixin(targets = "net.minecraft.network.protocol.common.custom.CustomPacketPayload$1", priority = 1100)
 public abstract class ApolloPayloadObserverMixin {
     @Inject(method = "decode(Lnet/minecraft/network/FriendlyByteBuf;)Lnet/minecraft/network/protocol/common/custom/CustomPacketPayload;", at = @At("HEAD"))

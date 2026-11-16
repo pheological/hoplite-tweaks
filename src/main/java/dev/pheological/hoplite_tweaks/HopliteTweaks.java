@@ -9,6 +9,7 @@ import dev.pheological.hoplite_tweaks.network.TeammateNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.impl.networking.PayloadTypeRegistryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,18 +28,20 @@ public final class HopliteTweaks {
         QuakeProKeybind.initialize();
         QuickcraftKeybind.initialize();
 
-        // Lunar must retain ownership of its channel, including server mod restrictions.
-        boolean registerApollo = ApolloCompatibility.shouldRegisterChannel(
-            HopliteTweaks.class.getClassLoader());
+        // Preserve an existing owner's codec and payload class, as well as Lunar's native handling.
         //? >=26 {
-        /*if (registerApollo) {
-            PayloadTypeRegistry.clientboundPlay().register(ApolloPayload.TYPE, ApolloPayload.CODEC);
-        }
+        /*var apolloRegistry = PayloadTypeRegistry.clientboundPlay();
         *///?} else {
-        if (registerApollo) {
-            PayloadTypeRegistry.playS2C().register(ApolloPayload.TYPE, ApolloPayload.CODEC);
-        }
+        var apolloRegistry = PayloadTypeRegistry.playS2C();
         //?}
+        // Fabric's public registry API has no lookup; query its implementation before registering.
+        boolean apolloAlreadyRegistered =
+            ((PayloadTypeRegistryImpl<?>) apolloRegistry).get(ApolloPayload.TYPE) != null;
+        boolean registerApollo = ApolloCompatibility.shouldRegisterChannel(
+            HopliteTweaks.class.getClassLoader(), apolloAlreadyRegistered);
+        if (registerApollo) {
+            apolloRegistry.register(ApolloPayload.TYPE, ApolloPayload.CODEC);
+        }
         if (registerApollo) {
             ClientPlayNetworking.registerGlobalReceiver(ApolloPayload.TYPE, (payload, context) -> {
                 if (HopliteSession.isActive()) {
@@ -48,7 +51,7 @@ public final class HopliteTweaks {
                 }
             });
         } else {
-            LOGGER.info("Lunar Client detected; observing cooldowns without taking ownership of lunar:apollo");
+            LOGGER.info("Existing Apollo handler detected; observing cooldowns without taking ownership of lunar:apollo");
         }
         TeammateNetworking.initialize();
 

@@ -4,6 +4,10 @@
 
 # Changelog
 
+## 1.3.6
+
+- Fix startup crashes when another Fabric mod already owns the Apollo API channel, preserving its codec and receiver while observing cooldown packets.
+
 ## 1.3.5
 
 - Place markers directly above loaded teammates using their current position and height.

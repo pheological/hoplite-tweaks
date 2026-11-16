@@ -15,7 +15,16 @@ class ApolloCompatibilityTest {
     @Test
     void ordinaryFabricRetainsCooldownChannel() throws Exception {
         try (var loader = new URLClassLoader(new URL[]{clientFiles.toUri().toURL()}, null)) {
-            assertTrue(ApolloCompatibility.shouldRegisterChannel(loader));
+            assertTrue(ApolloCompatibility.shouldRegisterChannel(loader, false));
+            assertFalse(ApolloCompatibility.observeNativeChannel());
+        }
+    }
+
+    @Test
+    void anotherModKeepsItsCodecAndEnablesPassiveObservation() throws Exception {
+        try (var loader = new URLClassLoader(new URL[]{clientFiles.toUri().toURL()}, null)) {
+            assertFalse(ApolloCompatibility.shouldRegisterChannel(loader, true));
+            assertTrue(ApolloCompatibility.observeNativeChannel());
         }
     }
 
@@ -25,7 +34,8 @@ class ApolloCompatibilityTest {
         Files.createDirectories(marker.getParent());
         Files.write(marker, new byte[0]);
         try (var loader = new URLClassLoader(new URL[]{clientFiles.toUri().toURL()}, null)) {
-            assertFalse(ApolloCompatibility.shouldRegisterChannel(loader));
+            assertFalse(ApolloCompatibility.shouldRegisterChannel(loader, false));
+            assertTrue(ApolloCompatibility.observeNativeChannel());
         }
     }
 }

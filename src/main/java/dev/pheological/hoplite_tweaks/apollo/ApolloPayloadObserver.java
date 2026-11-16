@@ -2,7 +2,7 @@ package dev.pheological.hoplite_tweaks.apollo;
 
 import net.minecraft.network.FriendlyByteBuf;
 
-/** Reads a copy of an incoming payload without consuming bytes needed by Lunar's decoder. */
+/** Reads a copy of an incoming payload without consuming bytes needed by the owner's decoder. */
 public final class ApolloPayloadObserver {
     private ApolloPayloadObserver() {
     }
@@ -15,7 +15,7 @@ public final class ApolloPayloadObserver {
             view.readBytes(data);
             return data;
         } catch (RuntimeException ignored) {
-            // Vanilla/Lunar retain responsibility for rejecting malformed packets.
+            // Vanilla/the channel owner retain responsibility for rejecting malformed packets.
             return null;
         }
     }
