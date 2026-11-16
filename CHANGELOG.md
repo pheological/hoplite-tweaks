@@ -4,6 +4,11 @@
 
 # Changelog
 
+## 1.3.7
+
+- Fix missing trap badges and kill credit for Pointed Dripstone deaths prefixed with ELIMINATION.
+- Include the Apollo channel compatibility fix prepared in 1.3.6.
+
 ## 1.3.6
 
 - Fix startup crashes when another Fabric mod already owns the Apollo API channel, preserving its codec and receiver while observing cooldown packets.

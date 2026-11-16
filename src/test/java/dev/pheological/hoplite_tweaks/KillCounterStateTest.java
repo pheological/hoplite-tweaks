@@ -70,6 +70,22 @@ class KillCounterStateTest {
         assertTrue(state.hasDripstoneBadge(attacker));
     }
 
+    @Test void eliminationPrefixedPointedDripstoneCreditsTheActualAttacker() {
+        for (String prefix : List.of("ELIMINATION! ", "\uE20C §cELIMINATION!§r \uE338 ")) {
+            var state = state();
+            String message = prefix + "§a_Victim1§r was pricked to death by a Pointed Dripstone "
+                + "while fighting \uE338 §a9Attacker_§r";
+            assertEquals(new KillCounterState.Kill(victim, attacker), state.parse(message));
+            assertEquals(new KillCounterState.Kill(victim, attacker), state.detectDeath(message, 0));
+            assertTrue(state.accept(message, 0));
+            assertEquals(1, state.count(attacker));
+            assertTrue(state.hasDripstoneBadge(attacker));
+            assertFalse(state.hasDripstoneBadge(victim));
+            assertFalse(state.accept(message, 1));
+            assertEquals(1, state.count(attacker));
+        }
+    }
+
     @Test void squashedByPlayersDripstoneCountsAsATrapKill() {
         var state = state();
         String message = "\uE20C ELIMINATION! \uE338 _Victim1 was squashed by \uE338 9Attacker_'s dripstone.";

@@ -50,6 +50,10 @@ final class KillCounterState {
         }
         if (was < 1 || by <= was + 1 || by >= words.length - 1) return null;
         Kill pair = pair(words[0], words[words.length - 1]);
+        if (pair != null) return pair;
+        // Environmental kills name the attacker at the end ("while fighting"),
+        // while the victim follows an optional ELIMINATION prefix.
+        pair = pair(words[was - 1], words[words.length - 1]);
         return pair != null ? pair : pair(words[was - 1], words[by + 1]);
     }
 
