@@ -9,12 +9,12 @@ class TeammateMotionTest {
     private static final UUID PLAYER = UUID.randomUUID();
 
     @Test
-    void sparseUpdatesCatchUpWithin150MillisInsteadOfAddingSecondsOfLag() {
+    void sparseUpdatesAreSmoothedAcrossTheObservedPacketInterval() {
         TeammateMotion first = new TeammateMotion(sample(0, "world"), null, 0);
         TeammateMotion next = new TeammateMotion(sample(20, "world"), first, 5_000);
         assertEquals(0, next.position(5_000).x, 0.001);
-        assertEquals(10, next.position(5_075).x, 0.001);
-        assertEquals(20, next.position(5_150).x, 0.001);
+        assertEquals(5, next.position(6_250).x, 0.001);
+        assertEquals(10, next.position(7_500).x, 0.001);
         assertEquals(20, next.position(10_000).x, 0.001);
         assertEquals(20, next.position(60_000).x, 0.001);
     }
