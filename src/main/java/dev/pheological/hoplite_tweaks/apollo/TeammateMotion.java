@@ -2,7 +2,7 @@ package dev.pheological.hoplite_tweaks.apollo;
 
 import net.minecraft.world.phys.Vec3;
 
-/** Smooths sparse remote-player snapshots over the interval observed between packets. */
+/** Smooths remote snapshots without adding an entire server update interval of delay. */
 final class TeammateMotion {
     private final ApolloModels.Teammate sample;
     private final long receivedAt;
@@ -21,7 +21,8 @@ final class TeammateMotion {
             && interval >= 50 && interval <= 10_000 && movement.length() <= 64
             && movement.length() / interval <= 0.02;
         start = continuous ? previous.position(now) : target;
-        transitionMillis = continuous ? interval : 0;
+        // Catch up promptly even when server snapshots arrive several seconds apart.
+        transitionMillis = continuous ? Math.min(interval, 150L) : 0;
     }
 
     Vec3 position(long now) {

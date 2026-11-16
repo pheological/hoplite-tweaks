@@ -4,6 +4,11 @@
 
 # Changelog
 
+## 1.3.9
+
+- Fix startup on Fabric API versions without the typed Apollo registry lookup overload.
+- Limit remote teammate marker smoothing to 150 milliseconds instead of adding a full server snapshot interval of delay.
+
 ## 1.3.8
 
 - Smooth Team View markers above nearby players every frame using interpolated player positions.

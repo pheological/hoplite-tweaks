@@ -36,7 +36,7 @@ public final class HopliteTweaks {
         //?}
         // Fabric's public registry API has no lookup; query its implementation before registering.
         boolean apolloAlreadyRegistered =
-            ((PayloadTypeRegistryImpl<?>) apolloRegistry).get(ApolloPayload.TYPE) != null;
+            ((PayloadTypeRegistryImpl<?>) apolloRegistry).get(ApolloPayload.TYPE.id()) != null;
         boolean registerApollo = ApolloCompatibility.shouldRegisterChannel(
             HopliteTweaks.class.getClassLoader(), apolloAlreadyRegistered);
         if (registerApollo) {
