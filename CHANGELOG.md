@@ -4,6 +4,10 @@
 
 # Changelog
 
+## 1.3.10
+
+- Align nearby Team View markers with Minecraft’s player rendering position to correct potential trailing above visible teammates.
+
 ## 1.3.9
 
 - Switch Team View to Apollo team updates and resets, including UUID-only nearby members resolved from smoothly interpolated loaded players.
