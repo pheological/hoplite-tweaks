@@ -19,6 +19,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 //? >=26.2 {
 /*import net.minecraft.world.scores.TeamColor;
 *///?} else {
@@ -107,7 +108,7 @@ public final class TeammateMarkerRenderer {
         float tickDelta = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         client.level.players().forEach(player -> ApolloState.observeLoadedTeammate(
-            player.getUUID(), player.getPosition(tickDelta),
+            player.getUUID(), renderedPosition(player, tickDelta),
             ApolloState.playerWorld().isBlank() ? client.level.dimension().identifier().toString()
                 : ApolloState.playerWorld(), player.getGameProfile().name()));
         long now = System.currentTimeMillis();
@@ -159,7 +160,7 @@ public final class TeammateMarkerRenderer {
         if (loaded == null && !teammate.hasPosition()) return null;
         Vec3 worldPosition = loaded == null
             ? ApolloState.teammatePosition(teammate)
-            : loaded.getPosition(tickDelta);
+            : renderedPosition(loaded, tickDelta);
         return new Marker(
             teammate,
             worldPosition,
@@ -171,6 +172,15 @@ public final class TeammateMarkerRenderer {
             false,
             0L,
             teammate.displayName()
+        );
+    }
+
+    private static Vec3 renderedPosition(AbstractClientPlayer player, float tickDelta) {
+        // Match EntityRenderer's frame position. getPosition uses xo/yo/zo instead.
+        return new Vec3(
+            Mth.lerp(tickDelta, player.xOld, player.getX()),
+            Mth.lerp(tickDelta, player.yOld, player.getY()),
+            Mth.lerp(tickDelta, player.zOld, player.getZ())
         );
     }
 
