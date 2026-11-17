@@ -24,6 +24,19 @@ public final class ApolloState {
     private static final Pattern FORMATTING = Pattern.compile("(?i)§[0-9a-fk-orx]");
     private static final Pattern PROFILE_NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
 
+    private static volatile String playerWorld = "";
+
+    public static void setPlayerWorld(String world) { playerWorld = world; }
+
+    public static String playerWorld() { return playerWorld; }
+
+    public static boolean isCurrentWorld(String world, String dimension) {
+        if (world.isBlank()) return true;
+        if (!playerWorld.isBlank()) return world.equals(playerWorld);
+        return world.equals(dimension) || (!world.contains(":")
+            && dimension.equals("minecraft:" + world));
+    }
+
     private ApolloState() {
     }
 
@@ -58,16 +71,27 @@ public final class ApolloState {
         Map<UUID, ApolloModels.Teammate> previous = new HashMap<>(TEAMMATES);
         TEAMMATES.clear();
         for (ApolloModels.Teammate member : members) {
-            ApolloModels.Teammate prior = previous.remove(member.playerId());
+            UUID memberId = member.playerId();
+            ApolloModels.Teammate prior = previous.remove(memberId);
             PENDING_DISCONNECTS.remove(member.playerId());
-            LAST_KNOWN.keySet().removeIf(key -> key.playerId().equals(member.playerId()));
+            LAST_KNOWN.keySet().removeIf(key -> key.playerId().equals(memberId));
             // Only an actual removal followed by a reappearance proves that a dead
             // player was revived. A corpse may remain in consecutive snapshots.
             if (prior == null) {
                 DEATH_LOCATIONS.remove(member.playerId());
                 EXPIRED_CORPSES.remove(member.playerId());
             }
-            MOTION.compute(member.playerId(), (id, motion) -> new TeammateMotion(member, motion, now));
+            if (!member.hasPosition() && prior != null && prior.hasPosition()) {
+                member = new ApolloModels.Teammate(member.playerId(), prior.x(), prior.y(), prior.z(),
+                    prior.world(), member.displayName().isBlank() ? prior.displayName() : member.displayName(),
+                    member.color(), member.updatedAt());
+            }
+            ApolloModels.Teammate snapshot = member;
+            if (member.hasPosition()) {
+                MOTION.compute(member.playerId(), (id, motion) -> new TeammateMotion(snapshot, motion, now));
+            } else {
+                MOTION.remove(member.playerId());
+            }
             TEAMMATES.put(member.playerId(), member);
         }
         previous.values().forEach(teammate -> {
@@ -97,6 +121,16 @@ public final class ApolloState {
         Set<UUID> onlinePlayers
     ) {
         replaceTeammates(members, onlinePlayers == null ? Set.of() : onlinePlayers);
+    }
+
+    /** Keep positions omitted by Apollo available from actual loaded entities. */
+    public static void observeLoadedTeammate(UUID id, Vec3 position, String world, String name) {
+        TEAMMATES.computeIfPresent(id, (key, member) -> {
+            observeProfile(id, name);
+            return new ApolloModels.Teammate(id, position.x, position.y, position.z, world,
+                member.displayName().isBlank() ? name : member.displayName(), member.color(),
+                System.currentTimeMillis());
+        });
     }
 
     public static Vec3 teammatePosition(ApolloModels.Teammate teammate) {
@@ -138,7 +172,7 @@ public final class ApolloState {
                 .max(java.util.Comparator.comparingLong(ApolloModels.Teammate::updatedAt))
                 .orElse(null);
         }
-        if (sample == null) {
+        if (sample == null || !sample.hasPosition()) {
             return false;
         }
         String profileName = PROFILE_NAMES.get(playerId);
@@ -191,11 +225,12 @@ public final class ApolloState {
 
     public static void clear() {
         clearTeammates();
+        playerWorld = "";
         COOLDOWNS.clear();
     }
 
     private static void archive(ApolloModels.Teammate teammate) {
-        if (EXPIRED_CORPSES.contains(teammate.playerId())) {
+        if (!teammate.hasPosition() || EXPIRED_CORPSES.contains(teammate.playerId())) {
             return;
         }
         String profileName = PROFILE_NAMES.get(teammate.playerId());

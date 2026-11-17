@@ -16,6 +16,9 @@ public final class ApolloModels {
         int color,
         long updatedAt
     ) {
+        public boolean hasPosition() {
+            return Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z);
+        }
     }
 
     public record LastKnownTeammate(Teammate teammate, String profileName) {

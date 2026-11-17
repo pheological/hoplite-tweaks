@@ -38,10 +38,13 @@ public final class TeamTrackerApi {
                 var loaded = client.level.players().stream()
                     .filter(player -> player.getUUID().equals(member.playerId()))
                     .findFirst().orElse(null);
+                if (loaded == null && !member.hasPosition()) return null;
                 if (loaded != null && (!loaded.isAlive() || loaded.getHealth() <= 0)) return null;
                 var position = loaded == null ? ApolloState.teammatePosition(member)
                     : loaded.getPosition(partialTick);
-                return new Teammate(member.playerId(), member.displayName(), member.color(),
+                return new Teammate(member.playerId(),
+                    member.displayName().isBlank() && loaded != null
+                        ? loaded.getGameProfile().name() : member.displayName(), member.color(),
                     position.x, position.y, position.z,
                     bearing(position.x - origin.x, position.z - origin.z),
                     position.distanceTo(origin));
@@ -52,8 +55,7 @@ public final class TeamTrackerApi {
     }
 
     static boolean sameDimension(String world, String dimension) {
-        return world.isBlank() || world.equals(dimension)
-            || (!world.contains(":") && dimension.equals("minecraft:" + world));
+        return ApolloState.isCurrentWorld(world, dimension);
     }
 
     static double bearing(double dx, double dz) {

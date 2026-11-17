@@ -21,7 +21,13 @@ public final class ApolloProtocol {
                 return;
             }
 
-            if (typeUrl.endsWith(DISPLAY_COOLDOWN)) {
+            if (typeUrl.equals("type.googleapis.com/lunarclient.apollo.player.v1.UpdatePlayerWorldMessage")) {
+                ApolloState.setPlayerWorld(string(new ProtoReader(value).fields(), 1, ""));
+                return;
+            }
+            if (ApolloTeamProtocol.accept(typeUrl, value)) {
+                return;
+            } else if (typeUrl.endsWith(DISPLAY_COOLDOWN)) {
                 parseCooldown(value);
             } else if (typeUrl.endsWith(REMOVE_COOLDOWN)) {
                 ApolloState.removeCooldown(string(new ProtoReader(value).fields(), 1, ""));

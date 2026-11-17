@@ -106,12 +106,16 @@ public final class TeammateMarkerRenderer {
         //?}
         float tickDelta = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
+        client.level.players().forEach(player -> ApolloState.observeLoadedTeammate(
+            player.getUUID(), player.getPosition(tickDelta),
+            ApolloState.playerWorld().isBlank() ? client.level.dimension().identifier().toString()
+                : ApolloState.playerWorld(), player.getGameProfile().name()));
         long now = System.currentTimeMillis();
         client.level.players().stream()
             .filter(player -> player.isAlive() && player.getHealth() > 0.0F)
             .forEach(player -> ApolloState.reviveIfAlive(player.getUUID(), now));
 
-        String dimension = client.level.dimension().identifier().getPath();
+        String dimension = client.level.dimension().identifier().toString();
         Stream<Marker> liveMarkers = config.teammateMarkers
             ? ApolloState.teammates().stream()
                 .filter(teammate -> !teammate.playerId().equals(client.player.getUUID()))
@@ -119,6 +123,7 @@ public final class TeammateMarkerRenderer {
                     .noneMatch(death -> death.teammate().playerId().equals(teammate.playerId())))
                 .filter(teammate -> sameDimension(teammate.world(), dimension))
                 .map(teammate -> marker(client, teammate, cameraPosition, tickDelta))
+                .filter(java.util.Objects::nonNull)
             : Stream.empty();
         Stream<Marker> lastKnownMarkers = config.showLastKnownLocations
             ? ApolloState.lastKnownTeammates().stream()
@@ -151,6 +156,7 @@ public final class TeammateMarkerRenderer {
             .filter(player -> player.getUUID().equals(teammate.playerId()))
             .findFirst()
             .orElse(null);
+        if (loaded == null && !teammate.hasPosition()) return null;
         Vec3 worldPosition = loaded == null
             ? ApolloState.teammatePosition(teammate)
             : loaded.getPosition(tickDelta);
@@ -720,8 +726,7 @@ public final class TeammateMarkerRenderer {
     }
 
     private static boolean sameDimension(String world, String dimension) {
-        return world.isBlank()
-            || world.toLowerCase(Locale.ROOT).endsWith(dimension.toLowerCase(Locale.ROOT));
+        return ApolloState.isCurrentWorld(world, dimension);
     }
 
     private record Marker(

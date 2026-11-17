@@ -6,6 +6,8 @@
 
 ## 1.3.9
 
+- Switch Team View to Apollo team updates and resets, including UUID-only nearby members resolved from smoothly interpolated loaded players.
+
 - Fix startup on Fabric API versions without the typed Apollo registry lookup overload.
 
 ## 1.3.8
