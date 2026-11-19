@@ -2,6 +2,7 @@ package dev.pheological.hoplite_tweaks.api;
 
 import dev.pheological.hoplite_tweaks.HopliteSession;
 import dev.pheological.hoplite_tweaks.apollo.ApolloState;
+import dev.pheological.hoplite_tweaks.apollo.TeammateIdentity;
 import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
 import net.minecraft.client.Minecraft;
 
@@ -27,17 +28,17 @@ public final class TeamTrackerApi {
         }
         String dimension = client.level.dimension().identifier().toString();
         UUID self = client.player.getUUID();
+        var loadedTeammates = TeammateIdentity.loadedPlayers(ApolloState.teammates(), client.level.players());
         float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         var origin = client.player.getPosition(partialTick);
         var dead = ApolloState.deathLocations().stream()
             .map(entry -> entry.teammate().playerId()).collect(java.util.stream.Collectors.toSet());
         return ApolloState.teammates().stream()
-            .filter(member -> !member.playerId().equals(self) && !dead.contains(member.playerId()))
+            .filter(member -> !member.playerId().equals(self) && !dead.contains(member.playerId())
+                && loadedTeammates.get(member.playerId()) != client.player)
             .filter(member -> sameDimension(member.world(), dimension))
             .map(member -> {
-                var loaded = client.level.players().stream()
-                    .filter(player -> player.getUUID().equals(member.playerId()))
-                    .findFirst().orElse(null);
+                var loaded = loadedTeammates.get(member.playerId());
                 if (loaded == null && !member.hasPosition()) return null;
                 if (loaded != null && (!loaded.isAlive() || loaded.getHealth() <= 0)) return null;
                 var position = loaded == null ? ApolloState.teammatePosition(member)

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.pheological.hoplite_tweaks.apollo.ApolloModels;
 import dev.pheological.hoplite_tweaks.apollo.ApolloState;
+import dev.pheological.hoplite_tweaks.apollo.TeammateIdentity;
 import dev.pheological.hoplite_tweaks.config.HopliteTweaksConfig;
 //? >=26 {
 /*import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
@@ -107,23 +108,24 @@ public final class TeammateMarkerRenderer {
         //?}
         float tickDelta = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-        client.level.players().forEach(player -> ApolloState.observeLoadedTeammate(
-            player.getUUID(), renderedPosition(player, tickDelta),
-            ApolloState.playerWorld().isBlank() ? client.level.dimension().identifier().toString()
-                : ApolloState.playerWorld(), player.getGameProfile().name()));
+        var loadedTeammates = TeammateIdentity.loadedPlayers(ApolloState.teammates(), client.level.players());
         long now = System.currentTimeMillis();
-        client.level.players().stream()
-            .filter(player -> player.isAlive() && player.getHealth() > 0.0F)
-            .forEach(player -> ApolloState.reviveIfAlive(player.getUUID(), now));
+        loadedTeammates.forEach((memberId, player) -> {
+            ApolloState.observeLoadedTeammate(memberId, renderedPosition(player, tickDelta),
+                ApolloState.playerWorld().isBlank() ? client.level.dimension().identifier().toString()
+                    : ApolloState.playerWorld(), player.getGameProfile().name());
+            if (player.isAlive() && player.getHealth() > 0.0F) ApolloState.reviveIfAlive(memberId, now);
+        });
 
         String dimension = client.level.dimension().identifier().toString();
         Stream<Marker> liveMarkers = config.teammateMarkers
             ? ApolloState.teammates().stream()
-                .filter(teammate -> !teammate.playerId().equals(client.player.getUUID()))
+                .filter(teammate -> !teammate.playerId().equals(client.player.getUUID())
+                    && loadedTeammates.get(teammate.playerId()) != client.player)
                 .filter(teammate -> ApolloState.deathLocations().stream()
                     .noneMatch(death -> death.teammate().playerId().equals(teammate.playerId())))
                 .filter(teammate -> sameDimension(teammate.world(), dimension))
-                .map(teammate -> marker(client, teammate, cameraPosition, tickDelta))
+                .map(teammate -> marker(client, teammate, loadedTeammates.get(teammate.playerId()), cameraPosition, tickDelta))
                 .filter(java.util.Objects::nonNull)
             : Stream.empty();
         Stream<Marker> lastKnownMarkers = config.showLastKnownLocations
@@ -150,13 +152,10 @@ public final class TeammateMarkerRenderer {
     private static Marker marker(
         Minecraft client,
         ApolloModels.Teammate teammate,
+        AbstractClientPlayer loaded,
         Vec3 cameraPosition,
         float tickDelta
     ) {
-        AbstractClientPlayer loaded = client.level.players().stream()
-            .filter(player -> player.getUUID().equals(teammate.playerId()))
-            .findFirst()
-            .orElse(null);
         if (loaded == null && !teammate.hasPosition()) return null;
         Vec3 worldPosition = loaded == null
             ? ApolloState.teammatePosition(teammate)
