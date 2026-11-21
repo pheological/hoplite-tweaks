@@ -14,7 +14,7 @@ This setting allows you to see all teammates regardless of distance in Civilizat
 
 Team View uses Apollo team updates instead of Hoplite-specific teammate packets. Nearby members use interpolated Minecraft player positions each frame.
 
-On Lunar Client, Hoplite Tweaks reads a copy of incoming Apollo messages for its team and cooldown displays while leaving the original messages and channel ownership untouched so Lunar can enforce server mod restrictions.
+Hoplite Tweaks reads incoming Apollo messages without registering the Apollo channel. On standalone Fabric, Team View and the Cooldown Viewer depend on the server sending those updates to the client. Lunar Client handles its own Apollo registration and server mod restrictions.
 
 This setting shows cooldowns for all legendary items. Typically, the action bar only allows you to see the cooldown of one item at a time, but this setting allows you to see all of them.
 
