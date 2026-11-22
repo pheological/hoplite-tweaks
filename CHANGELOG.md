@@ -4,7 +4,7 @@
 
 # Changelog
 
-## 1.3.11
+## 1.3.12
 
 - Track nearby nicked teammates smoothly when the server teammate UUID differs from their visible player UUID, using an unambiguous name match while preserving server identities.
 - Apply the same identity matching to compass tracker integrations and nearby teammate state updates.
